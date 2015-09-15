@@ -1,14 +1,10 @@
 #include "tud_coop_uv/trackingnode.hpp"
-#include <random>
-#include "tf/transform_listener.h"
-#include "tf/transform_broadcaster.h"
-
 
 TrackingNode::TrackingNode()
 {
 
     m_transform_sub = nh.subscribe ("/arsys_single_board/transform", 1, &TrackingNode::arsys_transform_callback, this);
-    m_quad_vel_sub = nh.subscribe("/ardrone/odometry",1,&TrackingNode::m_quad_OdomCallback,this,ros::TransportHints().tcpNoDelay());
+    m_quad_vel_sub = nh.subscribe("/ardrone/odometry",1,&TrackingNode::quad_OdomCallback,this,ros::TransportHints().tcpNoDelay());
     m_arsys_pose_sub = nh.subscribe("/ar_single_board/pose", 1, &TrackingNode::arsys_marker_pose_callback, this);
 
     m_cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel_pid", 1);
@@ -16,7 +12,7 @@ TrackingNode::TrackingNode()
     m_cmd_vel_marker_pub = nh.advertise<visualization_msgs::Marker>("/cmd_vel_marker", 1);
 }
 
-void TrackingNode::m_quad_OdomCallback(const nav_msgs::Odometry& odo_msg){
+void TrackingNode::quad_OdomCallback(const nav_msgs::Odometry& odo_msg){
     std_msgs::Float64 debug_msg;
     m_odo_msg = odo_msg;
     //debug_msg.data = m_filtered_vel_x;
@@ -142,7 +138,7 @@ void TrackingNode::arsys_transform_callback (const geometry_msgs::TransformStamp
     // It works but we found some singularities in the borders with some inclinations,
     // perhaps due to the quaternion filter...
     // We changed the digital_filter_change_rate variable from 0.5 to 0.75 and it works better
-    m_transform = tf_digital_filter(m_transform,stampedTransform_in);
+    m_transform = m_tf_digital_filter(m_transform,stampedTransform_in);
 
     double x = m_transform.getOrigin().x();
     double y = m_transform.getOrigin().y();
@@ -159,7 +155,7 @@ void TrackingNode::arsys_transform_callback (const geometry_msgs::TransformStamp
 }
 
 
-tf::Transform& TrackingNode::tf_digital_filter(tf::Transform &dst, const tf::Transform &src)
+tf::Transform& TrackingNode::m_tf_digital_filter(tf::Transform &dst, const tf::Transform &src)
 {
     double digital_filter_change_rate =0.1;
 

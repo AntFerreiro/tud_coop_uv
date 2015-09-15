@@ -113,9 +113,20 @@ set(TRAKING_HEADER_FILES
     include/tud_coop_uv/trackingnode.hpp
 )
 
+set(MERGE_SOURCE_FILES
+    src/merge.cpp
+    src/mergenode.cpp
+)
+
+set(MERGE_HEADER_FILES
+    include/tud_coop_uv/mergenode.hpp
+)
+
 
 ## Declare a cpp executable
 add_executable(tracking ${TRAKING_SOURCE_FILES} ${TRAKING_HEADER_FILES})
+
+add_executable(merge ${MERGE_SOURCE_FILES} ${MERGE_HEADER_FILES})
 
 #add_executable(mainQt src/mainQt.cpp)
 
@@ -125,6 +136,8 @@ add_executable(tracking ${TRAKING_SOURCE_FILES} ${TRAKING_HEADER_FILES})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(tracking ${catkin_LIBRARIES})
+
+target_link_libraries(merge ${catkin_LIBRARIES})
 
 #target_link_libraries(mainQt ${catkin_LIBRARIES} ${QT_LIBRARIES})
 

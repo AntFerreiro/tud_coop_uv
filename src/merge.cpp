@@ -1,9 +1,9 @@
-#include "tud_coop_uv/trackingnode.hpp"
+#include "tud_coop_uv/mergenode.hpp"
 
 int main(int argc,char* argv[])
 {
-    ros::init(argc, argv, "tracking"); // Name of the node
-    TrackingNode Node;
+    ros::init(argc, argv, "merge"); // Name of the node
+    MergeNode Node;
 
     //int32_t looprate = 1000; //hz
     //ros::Rate loop_rate(looprate);
@@ -14,3 +14,4 @@ int main(int argc,char* argv[])
         //loop_rate.sleep();
         }
 }
+
