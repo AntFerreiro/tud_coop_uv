@@ -11,8 +11,14 @@ find_package(catkin REQUIRED COMPONENTS
 	rospy
         std_msgs
         nav_msgs
-        tf)
+        tf
+        message_generation)
 
+add_service_files(
+    DIRECTORY srv
+    FILES
+    SetController.srv
+)
 #For Qt
 #find_package(Qt4 COMPONENTS QtCore QtGui)
 #INCLUDE(${QT_USE_FILE})
@@ -73,7 +79,7 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-#generate_messages(DEPENDENCIES  std_msgs)
+generate_messages(DEPENDENCIES  std_msgs)
 
 ###################################
 ## catkin specific configuration ##
@@ -87,7 +93,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES coop_uv
-  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs tf
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs tf std_srvs
 #  DEPENDS system_lib
 )
 
