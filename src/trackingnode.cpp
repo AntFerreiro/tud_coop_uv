@@ -156,12 +156,6 @@ void TrackingNode::arsys_transform_callback (const geometry_msgs::TransformStamp
     m_tf_broadcaster.sendTransform(stampedTransform_in);
 
     m_tf_broadcaster.sendTransform(stampedTransform_out);
-
-
-
-
-
-
 }
 
 
