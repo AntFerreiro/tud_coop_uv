@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tud_coop_uv)
-SET(CMAKE_CXX_FLAGS "-std=c++0x")
+SET(CMAKE_CXX_FLAGS "-std=c++11")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -134,6 +134,8 @@ add_executable(tracking ${TRAKING_SOURCE_FILES} ${TRAKING_HEADER_FILES})
 
 add_executable(merge ${MERGE_SOURCE_FILES} ${MERGE_HEADER_FILES})
 
+add_executable(joy_control src/joy_control.cpp)
+
 #add_executable(mainQt src/mainQt.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -144,6 +146,8 @@ add_executable(merge ${MERGE_SOURCE_FILES} ${MERGE_HEADER_FILES})
 target_link_libraries(tracking ${catkin_LIBRARIES})
 
 target_link_libraries(merge ${catkin_LIBRARIES})
+
+target_link_libraries(joy_control ${catkin_LIBRARIES})
 
 #target_link_libraries(mainQt ${catkin_LIBRARIES} ${QT_LIBRARIES})
 

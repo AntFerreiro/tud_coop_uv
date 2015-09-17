@@ -7,7 +7,7 @@ TrackingNode::TrackingNode()
     m_quad_vel_sub = nh.subscribe("/ardrone/odometry",1,&TrackingNode::quad_OdomCallback,this,ros::TransportHints().tcpNoDelay());
     m_arsys_pose_sub = nh.subscribe("/ar_single_board/pose", 1, &TrackingNode::arsys_marker_pose_callback, this);
 
-    m_cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel_pid", 1);
+    m_cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/tracking/cmd_vel", 1);
     m_debug_pub = nh.advertise<std_msgs::Float64>("/pid/debug",1);    
     m_cmd_vel_marker_pub = nh.advertise<visualization_msgs::Marker>("/cmd_vel_marker", 1);
 }
