@@ -12,7 +12,10 @@ find_package(catkin REQUIRED COMPONENTS
         std_msgs
         nav_msgs
         tf
-        message_generation)
+        message_generation
+)
+
+find_package(CGAL REQUIRED COMPONENTS Core)
 
 add_service_files(
     DIRECTORY srv
@@ -65,11 +68,11 @@ add_service_files(
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
+add_service_files(
+   FILES
+   SetController.srv
 #   Service2.srv
-# )
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -105,6 +108,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
+include(${CGAL_USE_FILE})
 ## Declare a cpp library
 # add_library(coop_uv
 #   src/${PROJECT_NAME}/coop_uv.cpp
@@ -117,6 +121,15 @@ set(TRAKING_SOURCE_FILES
 
 set(TRAKING_HEADER_FILES
     include/tud_coop_uv/trackingnode.hpp
+)
+
+set(COVERAGE_SOURCE_FILES
+    src/coverage.cpp
+    src/coveragenode.cpp
+)
+
+set(COVERAGE_HEADER_FILES
+    include/tud_coop_uv/coveragenode.hpp
 )
 
 set(MERGE_SOURCE_FILES
@@ -132,6 +145,8 @@ set(MERGE_HEADER_FILES
 ## Declare a cpp executable
 add_executable(tracking ${TRAKING_SOURCE_FILES} ${TRAKING_HEADER_FILES})
 
+add_executable(coverage ${COVERAGE_SOURCE_FILES} ${COVERAGE_HEADER_FILES})
+
 add_executable(merge ${MERGE_SOURCE_FILES} ${MERGE_HEADER_FILES})
 
 add_executable(joy_control src/joy_control.cpp)
@@ -144,6 +159,8 @@ add_executable(joy_control src/joy_control.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(tracking ${catkin_LIBRARIES})
+
+target_link_libraries(coverage ${catkin_LIBRARIES} ${CGAL})
 
 target_link_libraries(merge ${catkin_LIBRARIES})
 
