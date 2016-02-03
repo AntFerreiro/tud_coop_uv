@@ -10,10 +10,12 @@ TUD_COOP_UV is a ROS Package that consolidates the research into tracking and co
 This node can be found in the ar_sys_prep package, implements a Gaussian Filtering of the image obtained from the Ardrone Autonomy Driver (from the bottom camera of the quadcopter) for a better detection of the Aruco Board by the ar_sys main node.
 
 subscribed topics: 
+
 */ardrone/bottom/image_raw
 */ardrone/bottom/camera_info
 
 published topics: 
+
 */ardrone/bottom/filtered/image_raw
 
 ### ar_sys
