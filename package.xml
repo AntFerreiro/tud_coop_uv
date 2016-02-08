@@ -51,6 +51,8 @@
   <build_depend>tf</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>cgal</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
 
 
   <!-- Dependencies needed after this package is compiled. -->
@@ -64,6 +66,8 @@
   <run_depend>tf</run_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>cgal</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>tf2_geometry_msgs</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

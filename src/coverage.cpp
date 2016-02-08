@@ -5,7 +5,7 @@ int main(int argc,char* argv[])
     ros::init(argc, argv, "coverage"); // Name of the node
     CoverageNode Node;
 
-    int32_t looprate = 1; //hz
+    int32_t looprate = 100; //hz
     ros::Rate loop_rate(looprate);
 
     //ros::spin();

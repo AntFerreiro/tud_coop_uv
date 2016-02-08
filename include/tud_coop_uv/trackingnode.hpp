@@ -8,6 +8,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "tf/transform_listener.h"
+
 #include "tf/transform_broadcaster.h"
 #include "tf/transform_datatypes.h"
 #include "visualization_msgs/Marker.h"
@@ -25,7 +26,7 @@ public:
     void arsys_marker_pose_callback(const geometry_msgs::PoseStamped& marker_pose_msg);
     void arsys_transform_callback(const geometry_msgs::TransformStamped& transformMsg);
 
-    tf::TransformListener m_tf_listener;
+
     tf::Transform& m_tf_digital_filter(tf::Transform &dst, const tf::Transform &src);
 
     void tracking_control(tf::Vector3& tracking_point);
@@ -44,6 +45,7 @@ private:
     geometry_msgs::Twist m_current_command;
     nav_msgs::Odometry m_odo_msg;
     tf::TransformBroadcaster m_tf_broadcaster;
+    tf::TransformListener m_tf_listener;
     //Initial transform for filter
     tf::Transform m_transform = tf::Transform::getIdentity(); //Initial position
 };

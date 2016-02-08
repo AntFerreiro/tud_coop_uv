@@ -1,17 +1,30 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tud_coop_uv)
-SET(CMAKE_CXX_FLAGS "-std=c++11")
+
+#check c++11 / c++0x
+include(CheckCXXCompilerFlag) 
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11) 
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X) 
+if(COMPILER_SUPPORTS_CXX11) 
+set(CMAKE_CXX_FLAGS "-std=c++11") 
+elseif(COMPILER_SUPPORTS_CXX0X) 
+set(CMAKE_CXX_FLAGS "-std=c++0x")
+else() 
+message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.") 
+endif()
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
 	geometry_msgs
+        tf2_geometry_msgs
 	roscpp
 	rospy
         std_msgs
         nav_msgs
         tf
+        tf2
         message_generation
 )
 
@@ -96,7 +109,7 @@ generate_messages(DEPENDENCIES  std_msgs)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES coop_uv
-  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs tf std_srvs
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs tf2 tf std_srvs tf2_geometry_msgs
 #  DEPENDS system_lib
 )
 

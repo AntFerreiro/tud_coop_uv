@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
+  <include file="$(find ar_sys)/launch/single_board_filtered_ardrone.launch" />
+
   <node pkg="tud_coop_uv" name="joy_control" type="joy_control"/>
   
   <node pkg="ardrone_velocity" name="pid_control" type="pid_control"/>
@@ -12,5 +14,9 @@
     <param name="deadzone" value="0.1" />
     <param name="autorepeat_rate" value="20" />
   </node>
+
+  <node pkg="tud_coop_uv" name="merge" type="merge"/>
+
+  <node pkg="tud_coop_uv" name="tracking" type="tracking"/>
 
 </launch>

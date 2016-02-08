@@ -35,8 +35,8 @@ void TrackingNode::tracking_control(tf::Vector3& tracking_point){
     double velx;
     double vely;
 
-    velx = tracking_point.x()*0.5;
-    vely = tracking_point.y()*0.5;
+    velx = tracking_point.x()*0.75;
+    vely = tracking_point.y()*0.75;
 
     double norm = sqrt(velx*velx + vely*vely);
     //!Completly arbitrary number (change with ros_param)
@@ -59,7 +59,7 @@ void TrackingNode::draw_arrow_rviz(tf::Vector3& endpoint){
     visualization_msgs::Marker cmd_vel_marker;
     cmd_vel_marker.header.frame_id = "/ardrone_base_link_fixed";
     cmd_vel_marker.header.stamp = ros::Time::now();
-    cmd_vel_marker.ns = "tud_coop_uv";
+    cmd_vel_marker.ns = "tud_coop_uv_tracking";
     cmd_vel_marker.id = 0;
     cmd_vel_marker.type = visualization_msgs::Marker::ARROW;
     cmd_vel_marker.action = visualization_msgs::Marker::ADD;
@@ -85,7 +85,7 @@ void TrackingNode::draw_arrow_rviz(tf::Vector3& endpoint){
 }
 
 void TrackingNode::arsys_marker_pose_callback(const geometry_msgs::PoseStamped& marker_pose_msg){
-    tf::StampedTransform transform_ardrone_board; // boardfiltered -> bottomcam -> ardrone_base_link
+    tf::StampedTransform transform_ardrone_board; // boardFiltered -> ardrone_base_bottomcam -> ardrone_base_link
     try{
       m_tf_listener.lookupTransform("/boardFiltered", "/ardrone_base_link", ros::Time(0), transform_ardrone_board);
 
