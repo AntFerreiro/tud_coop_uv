@@ -2,39 +2,29 @@ cmake_minimum_required(VERSION 2.8.3)
 project(tud_coop_uv)
 
 set (CMAKE_CXX_STANDARD 11)
-#check c++11 / c++0x
-#include(CheckCXXCompilerFlag) 
-#CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11) 
-#CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X) 
-#if(COMPILER_SUPPORTS_CXX11) 
-#set(CMAKE_CXX_FLAGS "-std=c++11") 
-#elseif(COMPILER_SUPPORTS_CXX0X) 
-#set(CMAKE_CXX_FLAGS "-std=c++0x")
-#else() 
-#message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.") 
-#endif()
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-	geometry_msgs
-        tf2_geometry_msgs
-	roscpp
-	rospy
-        std_msgs
-        nav_msgs
-        tf
-        tf2
-        message_generation
+    geometry_msgs
+    tf2_geometry_msgs
+    roscpp
+    rospy
+    std_srvs
+    std_msgs
+    nav_msgs
+    tf
+    tf2
+    message_generation
 )
 
 find_package(CGAL REQUIRED COMPONENTS Core)
 
 add_service_files(
-    DIRECTORY srv
-    FILES
-    SetController.srv
+  DIRECTORY srv
+  FILES
+  SetController.srv
 )
 #For Qt
 #find_package(Qt4 COMPONENTS QtCore QtGui)
@@ -82,11 +72,10 @@ add_service_files(
 # )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-   FILES
-   SetController.srv
-#   Service2.srv
-)
+#add_service_files(
+#   FILES
+#   SetController.srv
+#)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -110,7 +99,7 @@ generate_messages(DEPENDENCIES  std_msgs)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES coop_uv
-  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs tf2 tf std_srvs tf2_geometry_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs nav_msgs tf2 tf std_srvs tf2_geometry_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -170,6 +159,10 @@ add_executable(joy_control src/joy_control.cpp)
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 ##add_dependencies(coop_uv_node coop_uv_generate_messages_cpp)
+add_dependencies(merge tud_coop_uv_generate_messages_cpp)
+add_dependencies(tracking tud_coop_uv_generate_messages_cpp)
+add_dependencies(joy_control tud_coop_uv_generate_messages_cpp)
+add_dependencies(coverage tud_coop_uv_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(tracking ${catkin_LIBRARIES})
@@ -236,4 +229,3 @@ target_link_libraries(joy_control ${catkin_LIBRARIES})
 file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/tud_coop_uv/*.hpp)
 FILE(GLOB_RECURSE INC_ALL "include/tud_coop_uv/*.hpp")
 FILE(GLOB_RECURSE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS src/*.cpp)
-

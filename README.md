@@ -3,18 +3,20 @@
 ## Introduction
 TUD_COOP_UV is a ROS Package that consolidates the research into tracking and coverage of the Control Methods and Robotics Lab at TU Darmstadt. This package implements the nodes required for the tracking of a Robotino Robot by an AR.Drone 2.0 Quadcopter and simultaneously performs the Coverage of the surrounding environment.
 
+![Flowchart of the system](URL)
+
 ## Nodes required for the system
 
 ### ar_sys_prep
 
 This node can be found in the ar_sys_prep package, implements a Gaussian Filtering of the image obtained from the Ardrone Autonomy Driver (from the bottom camera of the quadcopter) for a better detection of the Aruco Board by the ar_sys main node.
 
-subscribed topics: 
+subscribed topics:
 
 * /ardrone/bottom/image_raw
 * /ardrone/bottom/camera_info
 
-published topics: 
+published topics:
 
 * /ardrone/bottom/filtered/image_raw
 
@@ -39,7 +41,7 @@ published topics:
 
 
 
-## Installation 
+## Installation
 ### Compile from source
 This ROS package depends on the following ROS packages for compilation: geometry_msgs, roscpp, rospy, nav_msgs,std_srvs, std_msgs, tf, tf2, cgal.
 
