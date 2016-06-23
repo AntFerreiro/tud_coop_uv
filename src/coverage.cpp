@@ -8,6 +8,7 @@ int main(int argc,char* argv[])
     int32_t looprate = 100; //hz
     ros::Rate loop_rate(looprate);
 
+
     //ros::spin();
     while(Node.nh.ok()){
         ros::spinOnce();

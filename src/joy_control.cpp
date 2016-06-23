@@ -85,8 +85,6 @@ void joyCallback(const sensor_msgs::Joy& in)
     }
 
 
-
-
     if (buttonTakeoff){
         if ((ros::Time::now() - buttonTakeoff_pressed_instant) > delay_button){
             buttonTakeoff_pressed_instant = ros::Time::now();
@@ -105,14 +103,15 @@ void joyCallback(const sensor_msgs::Joy& in)
     out_twist.linear.y = vely;
     out_twist.linear.z = height;
     out_twist.angular.z = angz;
-    //To Disable auto hover
 
 
     if (buttonEnable){
+        //Enable flying without hover
         out_twist.angular.x = 1.0;
         out_twist.angular.y = 1.0;
     }
     else{
+        //Default. Flying using auto hover
         out_twist.angular.x = 0.0;
         out_twist.angular.y = 0.0;
     }

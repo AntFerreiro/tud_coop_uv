@@ -7,7 +7,7 @@ MergeNode::MergeNode()
     m_coverage_sub = nh.subscribe ("/coverage/cmd_vel", 1, &MergeNode::coverage_callback, this);
     m_joy_sub = nh.subscribe ("/joy/cmd_vel", 1, &MergeNode::joy_callback, this);
 
-    m_cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel_pid",1);
+    m_cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel_ref",1);
 
     m_set_controller_srv = nh.advertiseService("tud_coop_uv/set_controller", &MergeNode::set_controller_callback,this);
 }
@@ -56,15 +56,15 @@ void MergeNode::joy_callback(const geometry_msgs::Twist& cmd_vel){
 bool MergeNode::set_controller_callback(tud_coop_uv::SetController::Request& request,
                              tud_coop_uv::SetController::Response& response){
     if (request.controller == m_available_controllers["joy"]){
-        ROS_INFO("Joy controller");
+        ROS_WARN("Joy controller");
         m_current_controller = "joy";
     }
     else if (request.controller == m_available_controllers["tracking"]){
-        ROS_INFO("Tracking autonomous controller");
+        ROS_WARN("Tracking autonomous controller");
         m_current_controller = "tracking";
     }
     else if (request.controller == m_available_controllers["joint"]){
-        ROS_INFO("tracking and coverage autonomous controller");
+        ROS_WARN("Joint controller");
         m_current_controller = "joint";
     }
     else{
