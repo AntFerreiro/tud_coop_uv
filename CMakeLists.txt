@@ -117,6 +117,15 @@ include(${CGAL_USE_FILE})
 #   src/${PROJECT_NAME}/coop_uv.cpp
 # )
 
+set(DEFINETARGET_SOURCE_FILES
+    src/definetarget.cpp
+    src/definetargetnode.cpp
+)
+
+set(DEFINETARGET_HEADER_FILES
+    include/tud_coop_uv/definetargetnode.hpp
+)
+
 set(TRAKING_SOURCE_FILES
     src/tracking.cpp
     src/trackingnode.cpp
@@ -146,6 +155,8 @@ set(MERGE_HEADER_FILES
 
 
 ## Declare a cpp executable
+add_executable(define_target ${DEFINETARGET_SOURCE_FILES} ${DEFINETARGET_HEADER_FILES})
+
 add_executable(tracking ${TRAKING_SOURCE_FILES} ${TRAKING_HEADER_FILES})
 
 add_executable(coverage ${COVERAGE_SOURCE_FILES} ${COVERAGE_HEADER_FILES})
@@ -159,12 +170,15 @@ add_executable(joy_control src/joy_control.cpp)
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 ##add_dependencies(coop_uv_node coop_uv_generate_messages_cpp)
+add_dependencies(define_target tud_coop_uv_generate_messages_cpp)
 add_dependencies(merge tud_coop_uv_generate_messages_cpp)
 add_dependencies(tracking tud_coop_uv_generate_messages_cpp)
 add_dependencies(joy_control tud_coop_uv_generate_messages_cpp)
 add_dependencies(coverage tud_coop_uv_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
+target_link_libraries(define_target ${catkin_LIBRARIES})
+
 target_link_libraries(tracking ${catkin_LIBRARIES})
 
 target_link_libraries(coverage ${catkin_LIBRARIES} ${CGAL})
