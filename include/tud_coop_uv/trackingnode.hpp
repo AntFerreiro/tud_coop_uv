@@ -37,7 +37,7 @@ public:
 private:
     ros::Subscriber m_quad_vel_sub;
     ros::Subscriber m_arsys_pose_sub;
-    ros::Subscriber m_arsys_transform_sub;
+    ros::Subscriber arsys_transform_sub_;
     ros::Subscriber m_transform_sub;
     ros::Publisher m_cmd_vel_pub;
     ros::Publisher m_cmd_vel_marker_pub; //! For debugging cmd_vel in RVIZ

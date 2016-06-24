@@ -9,7 +9,7 @@ int main(int argc,char* argv[])
     //ros::Rate loop_rate(looprate);
 
     //ros::spin();
-    while(Node.nh.ok()){
+    while(Node.nh_.ok()){
         ros::spinOnce();
         //loop_rate.sleep();
         }

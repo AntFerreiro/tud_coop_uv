@@ -19,7 +19,7 @@ class DefineTargetNode
 {
 public:
     DefineTargetNode();
-    ros::NodeHandle nh;
+    ros::NodeHandle nh_;
 
     // ROS message callbacks
     void quad_OdomCallback(const nav_msgs::Odometry& odo_msg);
@@ -27,27 +27,41 @@ public:
     void arsys_transform_callback(const geometry_msgs::TransformStamped& transformMsg);
 
 
-    tf::Transform& m_tf_digital_filter(tf::Transform &dst, const tf::Transform &src);
+    tf::Transform& tf_filter(tf::Transform &dst, const tf::Transform &src);
 
     void tracking_control(tf::Vector3& tracking_point);
     void set_hover(void);
     void draw_arrow_rviz(tf::Vector3& endpoint);
-    bool m_cmd_valid = false;
+
 
 private:
-    ros::Subscriber m_quad_vel_sub;
-    ros::Subscriber m_arsys_pose_sub;
-    ros::Subscriber m_arsys_transform_sub;
-    ros::Subscriber m_transform_sub;
-    ros::Publisher m_cmd_vel_pub;
-    ros::Publisher m_cmd_vel_marker_pub; //! For debugging cmd_vel in RVIZ
-    ros::Publisher m_debug_pub; //! For debugging variables in rqt_plot
-    geometry_msgs::Twist m_current_command;
-    nav_msgs::Odometry m_odo_msg;
+
+    ros::Subscriber arsys_pose_sub_;
+    ros::Subscriber arsys_transform_sub_;
+
+
+    ros::Publisher cmd_vel_marker_pub_; //! For debugging cmd_vel in RVIZ
+
     tf::TransformBroadcaster m_tf_broadcaster;
     tf::TransformListener m_tf_listener;
     //Initial transform for filter
     tf::Transform m_transform = tf::Transform::getIdentity(); //Initial position
+
+    // ROS Node parameters
+    int n_ugv;
+    // transformation frames
+    std::vector<std::string> ugv_frame_;
+    std::vector<std::string> ugv_marker_frame_;
+    std::vector<std::string> uav_base_link_;
+
+
+    ///Maybe remove CHECK!
+    bool m_cmd_valid_ = false;
+    ros::Subscriber m_quad_vel_sub;
+    ros::Publisher cmd_vel_pub_;
+    ros::Publisher m_debug_pub; //! For debugging variables in rqt_plot
+    geometry_msgs::Twist m_current_command;
+    nav_msgs::Odometry m_odo_msg;
 };
 
 #endif // DEFINETARGETNODE_HPP
