@@ -2,7 +2,7 @@
 
 int main(int argc,char* argv[])
 {
-    ros::init(argc, argv, "tracking"); // Name of the node
+    ros::init(argc, argv, "define_target"); // Name of the node
     DefineTargetNode Node;
 
     //int32_t looprate = 1000; //hz

@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.8.3)
 project(tud_coop_uv)
 
 set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_FLAGS_DEBUG "-O0")
+set (CMAKE_C_FLAGS_DEBUG "-O0")
+
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)

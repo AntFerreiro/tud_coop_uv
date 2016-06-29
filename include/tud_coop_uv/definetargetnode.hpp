@@ -6,6 +6,7 @@
 #include "nav_msgs/Odometry.h"
 #include "std_msgs/Float64.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "tf/transform_listener.h"
 
@@ -27,32 +28,41 @@ public:
     void arsys_transform_callback(const geometry_msgs::TransformStamped& transformMsg);
 
 
-    tf::Transform& tf_filter(tf::Transform &dst, const tf::Transform &src);
+    tf::Transform& tf_interpolation(tf::Transform &dst, const tf::Transform &src, double interpolation_weight);
+    tf::Vector3 vector_interpolation(tf::Vector3 new_vector, tf::Vector3 old_vector, double interpolation_weight);
+    tf::Quaternion quaternion_interpolation(tf::Quaternion new_q, tf::Quaternion old_q, double interpolation_weight);
 
+    void calculate_target_pose( void );
     void tracking_control(tf::Vector3& tracking_point);
     void set_hover(void);
     void draw_arrow_rviz(tf::Vector3& endpoint);
+
+    void clean_marker_vars(void);
 
 
 private:
 
     ros::Subscriber arsys_pose_sub_;
     ros::Subscriber arsys_transform_sub_;
-
-
     ros::Publisher cmd_vel_marker_pub_; //! For debugging cmd_vel in RVIZ
-
     tf::TransformBroadcaster m_tf_broadcaster;
     tf::TransformListener m_tf_listener;
+
     //Initial transform for filter
     tf::Transform m_transform = tf::Transform::getIdentity(); //Initial position
 
     // ROS Node parameters
-    int n_ugv;
+    int n_ugv_;
+    bool filter_tf_;
     // transformation frames
-    std::vector<std::string> ugv_frame_;
-    std::vector<std::string> ugv_marker_frame_;
-    std::vector<std::string> uav_base_link_;
+    std::vector<std::string> ugv_frames_;
+    std::vector<std::string> ugv_marker_frames_;
+    std::string uav_base_link_;
+
+    // helper variables
+    ros::Time time_last_tf_message_;
+    int number_of_received_markers_;
+    std::map <std::string, bool> check_received_markers_;
 
 
     ///Maybe remove CHECK!
