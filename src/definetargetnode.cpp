@@ -3,9 +3,16 @@
 DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
   // if only one ARSYS marker
   time_last_tf_message_ = ros::Time::now();
+  //default names initialization
+  default_ugv_robot_names_.push_back("/c3po");
+  default_ugv_robot_names_.push_back("/r2d2");
+  default_ugv_robot_names_.push_back("/undefined_robot");
+  default_ugv_robot_names_.push_back("/undefined_robot");
+  default_ugv_robot_names_.push_back("/undefined_robot");
+  default_ugv_robot_names_.push_back("/undefined_robot");
   /// check conditions for more markers (maybe dynamic reconfigure)
   std::string marker_tf_topic, marker_pose_topic;
-  std::string ugv_frame_c3po, ugv_frame_r2d2;
+
   // ugv stands for unmanned ground vehicle
   // uav stands for unmanned aerial vehicle
   nh_.param<std::string>("marker_tf_topic", marker_tf_topic,
@@ -22,92 +29,40 @@ DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
   /// implemented)
   nh_.param<int>("n_ugv", n_ugv_, 2);
 
-  nh_.param<std::string>("ugv_frame_c3po", ugv_frame_c3po, "/c3po");
-  nh_.param<std::string>("ugv_frame_r2d2", ugv_frame_r2d2, "/r2d2");
-  ugv_frames_.push_back(ugv_frame_c3po);
-  ugv_marker_frames_.push_back(ugv_frame_c3po + "/top_marker");
-  ugv_frames_.push_back(ugv_frame_r2d2);
-  ugv_marker_frames_.push_back(ugv_frame_r2d2 + "/top_marker");
-
-  //If I have several markers this could be a for loop.
-  check_received_markers_[ugv_marker_frames_[0]] = false;
-  check_received_markers_[ugv_marker_frames_[1]] = false;
+  std::string ugv_frame;
+  for (int i=0; i<n_ugv_; i++){
+    nh_.param<std::string>("ugv_frame_ugv_"+i, ugv_frame, default_ugv_robot_names_[i]);
+    ugv_frames_.push_back(ugv_frame);
+    ugv_marker_frames_.push_back(ugv_frame + "/top_marker");
+    check_received_markers_[ugv_marker_frames_[i]] = false;
+  }
 
   arsys_transform_sub_ = nh_.subscribe(
       marker_tf_topic, 1, &DefineTargetNode::arsys_transform_callback, this);
-  arsys_pose_sub_ =
-      nh_.subscribe(marker_pose_topic, 1,
-                    &DefineTargetNode::arsys_marker_pose_callback, this);
 }
 
-void DefineTargetNode::arsys_marker_pose_callback(
-    const geometry_msgs::PoseStamped& marker_pose_msg) {
-  //  tf::StampedTransform transform_ardrone_board;  // boardFiltered -> //
-  //  ardrone_base_bottomcam ->// ardrone_base_link
-  //  try {
-  //    m_tf_listener.lookupTransform("/boardFiltered", "/ardrone_base_link",
-  //                                  ros::Time(0), transform_ardrone_board);
-
-  //  } catch (tf::TransformException& ex) {
-  //    ROS_ERROR("%s", ex.what());
-  //  }
-
-  // Now we create a new fixed frame transformation: /ardrone_base_link_fixed
-  // This will give us an ardrone frame that only changes in yaw
-  // in the same position of the /ardrone_base_link frame
-  //  double roll, pitch, yaw;
-  //  tf::StampedTransform stampedTransform_fixed;
-  //  tf::Transform transform_fixed;
-  //  transform_ardrone_board.getBasis().getRPY(roll, pitch, yaw);
-
-  //  transform_fixed.setOrigin(transform_ardrone_board.getOrigin());
-  //  transform_fixed.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, yaw));
-
-  //  // We publish the new stamped transform for RVIZ
-  //  stampedTransform_fixed.child_frame_id_ = "/ardrone_base_link_fixed";
-  //  stampedTransform_fixed.frame_id_ = "/boardFiltered";
-  //  stampedTransform_fixed.setData(transform_fixed);
-  //  stampedTransform_fixed.stamp_ = ros::Time::now();
-  //  m_tf_broadcaster.sendTransform(stampedTransform_fixed);
-
-  //  // Obtain marker position in ardrone fixed frame
-  //  tf::Vector3 marker_position(0, 0, 0);
-  //  marker_position = stampedTransform_fixed.inverse() * marker_position;
-
-  //  // We draw a tracking arrow in RVIZ for visual reference
-  //  draw_arrow_rviz(marker_position);
-
-  // Now we do the tracking
-  /// Here we publish the stamped Pose to tracking node
-  // tracking_control(marker_position);
-
-  //! TODO implement orientation PID controller using yaw variable
-}
-
-/// Understand this function, maybe I need several for other markers.
 void DefineTargetNode::arsys_transform_callback(
     const geometry_msgs::TransformStamped& transformMsg) {
   //! This message comes from the ar_sys package.
   //! It has the transform of a board_frame to the camera_frame
-  //! There is one message for each board
+  //! ar_sys will send one message for each board detected in an image
 
   // First we convert the message to a StampedTransform object
-  tf::StampedTransform stampedTransform_in;
+  tf::StampedTransform stampedTransform_in;  
   tf::transformStampedMsgToTF(transformMsg, stampedTransform_in);
 
-  //  double x = m_transform.getOrigin().x();
-  //  double y = m_transform.getOrigin().y();
-  //  ROS_INFO("Posicion marker " + transformMsg.header.frame_id + ":
-  //  (%f,%f)",x,y);
-  ROS_INFO("frame: %s, sec: %i, nsec: %i", transformMsg.child_frame_id.c_str(),
+  ROS_INFO("Received Board %s: sec: %i, nsec: %i", transformMsg.child_frame_id.c_str(),
            transformMsg.header.stamp.sec, transformMsg.header.stamp.nsec);
 
   if (filter_tf_) {
-    // We create a Stamped transform from the filtered transform
+    //! TODO(racuna) fix this part so it is possible to use several markers
+    //! We will need a past value for each configured marker
+    // We filter using past value and new value
     m_transform = tf_interpolation(m_transform, stampedTransform_in, 0.1);
     tf::StampedTransform stampedTransform_out(
         m_transform, transformMsg.header.stamp, transformMsg.header.frame_id,
         transformMsg.child_frame_id);
+    // We broadcast the transformations to the TF Server
     // Filtered transformation
     m_tf_broadcaster.sendTransform(stampedTransform_out);
   } else {
@@ -116,38 +71,39 @@ void DefineTargetNode::arsys_transform_callback(
     m_tf_broadcaster.sendTransform(stampedTransform_in);
   }
 
-  // test if we have both marker transformations ready
-  //ros::spinOnce();
+  //! This doesnt work, maybe differnt times are needed
+  // test if we have all the marker transformations ready
+  ros::spinOnce();
   bool tf_marker1_available, tf_marker2_available;
   uav_base_link_ = "cam";
   tf_marker1_available = m_tf_listener.canTransform(uav_base_link_, ugv_marker_frames_[0], transformMsg.header.stamp, NULL);
   tf_marker2_available = m_tf_listener.canTransform(uav_base_link_, ugv_marker_frames_[1], transformMsg.header.stamp, NULL);
 
   if (tf_marker1_available && tf_marker2_available) {
-    calculate_target_pose();
+    //calculate_target_pose();
+    ROS_INFO("We have all the required transformations");
   }
 
-  // If we have 4 markers we are expecting four messages like this
-  //is this the first one?
+  // is this the first marker?
   if(number_of_received_markers_ == 0){
-    //ok then check the name in the map
+    // then check the name in the map
     check_received_markers_[transformMsg.child_frame_id] = true;
     number_of_received_markers_ = 1;
     time_last_tf_message_ = transformMsg.header.stamp;
-    //check the amount of expected markers, if it is the last one, breaks)
+    // check the amount of expected markers, if it is the last one, breaks)
     if(number_of_received_markers_ == n_ugv_){
       clean_marker_vars();
-      //ros::spinOnce();
       calculate_target_pose();
       return;
     }
   }
   else{
     // It is not the first marker
-    // Check if the time stamps are equal (same group of detection has same time stamps)
+    // Check if the time stamps is equal to the las received marker
+    // (markers detected in same image have same time stamps)
     if (time_last_tf_message_ == transformMsg.header.stamp) {
       // A new marker from the same image has arrived
-      //Check that it is not repeated in the map
+      // Check that it is not repeated in the map (foolproof)
       if (check_received_markers_[transformMsg.child_frame_id] == true){
         ROS_ERROR("Received a repeated frame!!!");
       } else {
@@ -156,14 +112,12 @@ void DefineTargetNode::arsys_transform_callback(
       number_of_received_markers_++;
       if(number_of_received_markers_ == n_ugv_){
         clean_marker_vars();
-        //ros::spinOnce();
         calculate_target_pose();
         return;
       }
     }
     else{
-      //That means only one was received
-      // say error! only one received
+      ROS_INFO("The system is defined for %i UGVs but only %i markers were detected in the image", n_ugv_, number_of_received_markers_);
       clean_marker_vars();
       //check the new marker in the map
       check_received_markers_[transformMsg.child_frame_id] = true;
@@ -191,9 +145,8 @@ void DefineTargetNode::clean_marker_vars(void){
 void DefineTargetNode::calculate_target_pose(void) {
   // Now we want to obtain a transformation from the Quadcopter frame to the
   // Marker Frame
+  tf::StampedTransform target_stamped_transform;
   geometry_msgs::PoseStamped pose_marker_in_marker_frame, pose_marker_in_quad_frame[n_ugv_];
-  geometry_msgs::PointStamped center_marker;
-  tf::Vector3 marker_position_vector[n_ugv_];
   tf::Transform marker_tf[n_ugv_];
   // Messages are always initialized with zero/false values
   // A properly formed empty quaternion needs w=1.0
@@ -204,8 +157,6 @@ void DefineTargetNode::calculate_target_pose(void) {
     try {
       m_tf_listener.transformPose(uav_base_link_, pose_marker_in_marker_frame,
                                    pose_marker_in_quad_frame[i]);
-      // m_tf_listener.lookupTransform(ugv_marker_frame_[n_ugv_], uav_base_link_,
-      //                              ros::Time(0), marker_to_base_tf[n_ugv_]);
       tf::poseMsgToTF(pose_marker_in_quad_frame[i].pose, marker_tf[i]);
       marker_tf[i].getOrigin();
       ROS_INFO("%s position in quadcopter frame: (%f, %f, %f)",
@@ -217,14 +168,6 @@ void DefineTargetNode::calculate_target_pose(void) {
   }
 
   // Target is the middle point of all the markers (only two for now)
-//  double x, y, z;
-//  x = (marker_position_vector[0].point.x + marker_position_vector[1].point.x) / 2.0;
-//  y = (marker_position_vector[0].point.y + marker_position_vector[1].point.y) / 2.0;
-//  z = (marker_position_vector[0].point.z + marker_position_vector[1].point.z) / 2.0;
-
-
-
-
   tf::Vector3 center_between_markers = vector_interpolation(
       marker_tf[0].getOrigin(), marker_tf[1].getOrigin(), 0.5);
   tf::Quaternion interpolated_quaternion = quaternion_interpolation(
@@ -232,10 +175,17 @@ void DefineTargetNode::calculate_target_pose(void) {
   //tf::Vector3 target_position(x, y, z);
   ROS_INFO("Position in quadcopter frame: (%f, %f, %f)", center_between_markers.x(),center_between_markers.y(), center_between_markers.z());
 
-  // Interpolate transforms
+  // We publish the transformation to tf tree
+  target_stamped_transform.child_frame_id_ = "tracking_target";
+  target_stamped_transform.frame_id_ = uav_base_link_;
+  target_stamped_transform.stamp_ = ros::Time::now();
+  target_stamped_transform.setOrigin(center_between_markers);
+  target_stamped_transform.setRotation(interpolated_quaternion);
+
+  m_tf_broadcaster.sendTransform(target_stamped_transform);
 
 
-  //!The output of this node should be a new pose in Quadcopter base_link frame.
+  //!The output of this is a new target transformation from Quadcopter base_link frame.
 }
 
 tf::Transform& DefineTargetNode::tf_interpolation(tf::Transform& new_tf,

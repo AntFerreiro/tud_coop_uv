@@ -29,6 +29,7 @@ public:
 
     tf::Transform& m_tf_digital_filter(tf::Transform &dst, const tf::Transform &src);
 
+    tf::Point get_target_point(void);
     void tracking_control(tf::Vector3& tracking_point);
     void set_hover(void);
     void draw_arrow_rviz(tf::Vector3& endpoint);
@@ -39,13 +40,13 @@ private:
     ros::Subscriber m_arsys_pose_sub;
     ros::Subscriber arsys_transform_sub_;
     ros::Subscriber m_transform_sub;
-    ros::Publisher m_cmd_vel_pub;
-    ros::Publisher m_cmd_vel_marker_pub; //! For debugging cmd_vel in RVIZ
-    ros::Publisher m_debug_pub; //! For debugging variables in rqt_plot
+    ros::Publisher cmd_vel_pub_;
+    ros::Publisher cmd_vel_marker_pub_; //! For debugging cmd_vel in RVIZ
+    ros::Publisher debug_pub_; //! For debugging variables in rqt_plot
     geometry_msgs::Twist m_current_command;
-    nav_msgs::Odometry m_odo_msg;
+    nav_msgs::Odometry odo_msg_;
     tf::TransformBroadcaster m_tf_broadcaster;
-    tf::TransformListener m_tf_listener;
+    tf::TransformListener tf_listener_;
     //Initial transform for filter
     tf::Transform m_transform = tf::Transform::getIdentity(); //Initial position
 };
