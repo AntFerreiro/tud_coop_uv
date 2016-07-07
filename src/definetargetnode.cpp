@@ -10,25 +10,32 @@ DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
   default_ugv_robot_names_.push_back("/undefined_robot");
   default_ugv_robot_names_.push_back("/undefined_robot");
   default_ugv_robot_names_.push_back("/undefined_robot");
-  /// check conditions for more markers (maybe dynamic reconfigure)
+
+  //! UGV stands for unmanned ground vehicle
+  //! UAV stands for unmanned aerial vehicle
+
+  // Parameters definition
   std::string marker_tf_topic, marker_pose_topic;
 
-  // ugv stands for unmanned ground vehicle
-  // uav stands for unmanned aerial vehicle
   nh_.param<std::string>("marker_tf_topic", marker_tf_topic,
                          "/ar_multi_boards/transform");
+
   nh_.param<std::string>("marker_pose_topic", marker_pose_topic,
                          "/ar_multi_boards/pose");
+
   nh_.param<std::string>("uav_base_link_", uav_base_link_,
                          "/ardrone_base_link");
 
   //! TODO(racuna) fix filtering
   nh_.param<bool>("filter_tf", filter_tf_, false);
 
-  /// TODO(racuna) catch if number of ugv small than 1 or greater than 2 (not
-  /// implemented)
+  // Number of markers on top of UGV to be expected
   nh_.param<int>("n_ugv", n_ugv_, 2);
+  if(n_ugv_ < 1 || n_ugv_ > 6){
+    ROS_ERROR("This node works with a minimum of 1 and a maximun of 6 UGV (Unmanned Ground Vehicles)");
+  }
 
+  // Definition of UGV frames and their top_marker frames
   std::string ugv_frame;
   for (int i=0; i<n_ugv_; i++){
     nh_.param<std::string>("ugv_frame_ugv_"+i, ugv_frame, default_ugv_robot_names_[i]);
@@ -46,6 +53,17 @@ void DefineTargetNode::arsys_transform_callback(
   //! This message comes from the ar_sys package.
   //! It has the transform of a board_frame to the camera_frame
   //! ar_sys will send one message for each board detected in an image
+//  tf::StampedTransform tf_base_cam = tf::StampedTransform(
+//                     tf::Transform(
+//                       tf::createQuaternionFromRPY(0.0, 180.0 * _DEG2RAD, 90.0 * _DEG2RAD),
+//                       tf::Vector3(0.0, 0.00, -0.068)),
+//                     ros::Time::now(), "ardrone_base_link", "cam");
+//  m_tf_broadcaster.sendTransform(tf_base_cam);
+
+//  ROS_INFO("Quaternion %f, %f, %f. %f", tf_base_cam.getRotation().getW(),
+//           tf_base_cam.getRotation().getX(),
+//           tf_base_cam.getRotation().getY(),
+//           tf_base_cam.getRotation().getZ());
 
   // First we convert the message to a StampedTransform object
   tf::StampedTransform stampedTransform_in;  
@@ -53,6 +71,18 @@ void DefineTargetNode::arsys_transform_callback(
 
   ROS_INFO("Received Board %s: sec: %i, nsec: %i", transformMsg.child_frame_id.c_str(),
            transformMsg.header.stamp.sec, transformMsg.header.stamp.nsec);
+
+  // Check if Id is valid
+  std::string frame_id = transformMsg.child_frame_id;
+  bool frame_is_wanted = false;
+  for (int i=0; i<n_ugv_; i++){
+    if(ugv_marker_frames_[i] == frame_id){
+      frame_is_wanted = true;
+    }
+  }
+  if(!frame_is_wanted){
+    return;
+  }
 
   if (filter_tf_) {
     //! TODO(racuna) fix this part so it is possible to use several markers
@@ -71,18 +101,7 @@ void DefineTargetNode::arsys_transform_callback(
     m_tf_broadcaster.sendTransform(stampedTransform_in);
   }
 
-  //! This doesnt work, maybe differnt times are needed
-  // test if we have all the marker transformations ready
   ros::spinOnce();
-  bool tf_marker1_available, tf_marker2_available;
-  uav_base_link_ = "cam";
-  tf_marker1_available = m_tf_listener.canTransform(uav_base_link_, ugv_marker_frames_[0], transformMsg.header.stamp, NULL);
-  tf_marker2_available = m_tf_listener.canTransform(uav_base_link_, ugv_marker_frames_[1], transformMsg.header.stamp, NULL);
-
-  if (tf_marker1_available && tf_marker2_available) {
-    //calculate_target_pose();
-    ROS_INFO("We have all the required transformations");
-  }
 
   // is this the first marker?
   if(number_of_received_markers_ == 0){
@@ -152,7 +171,7 @@ void DefineTargetNode::calculate_target_pose(void) {
   // A properly formed empty quaternion needs w=1.0
   pose_marker_in_marker_frame.pose.orientation.w = 1.0;
 
-  for (int i; i< n_ugv_; i++){
+  for (int i=0; i< n_ugv_; i++){
     pose_marker_in_marker_frame.header.frame_id = ugv_marker_frames_[i];
     try {
       m_tf_listener.transformPose(uav_base_link_, pose_marker_in_marker_frame,
@@ -168,19 +187,31 @@ void DefineTargetNode::calculate_target_pose(void) {
   }
 
   // Target is the middle point of all the markers (only two for now)
-  tf::Vector3 center_between_markers = vector_interpolation(
-      marker_tf[0].getOrigin(), marker_tf[1].getOrigin(), 0.5);
-  tf::Quaternion interpolated_quaternion = quaternion_interpolation(
-      marker_tf[0].getRotation(), marker_tf[1].getRotation(), 0.5);
+  tf::Vector3 average_pos;
+  tf::Quaternion average_q;
+  for(int i=0; i<n_ugv_; i++){
+    if(i==0){
+      average_pos = marker_tf[i].getOrigin();
+      average_q = marker_tf[i].getRotation();
+    }
+    else{
+      average_pos = vector_interpolation(average_pos, marker_tf[i].getOrigin(), 0.5);
+      average_q = quaternion_interpolation(average_q, marker_tf[i].getRotation(), 0.5);
+    }
+  }
+//  tf::Vector3 center_between_markers = vector_interpolation(
+//      marker_tf[0].getOrigin(), marker_tf[1].getOrigin(), 0.5);
+//  tf::Quaternion interpolated_quaternion = quaternion_interpolation(
+//      marker_tf[0].getRotation(), marker_tf[1].getRotation(), 0.5);
   //tf::Vector3 target_position(x, y, z);
-  ROS_INFO("Position in quadcopter frame: (%f, %f, %f)", center_between_markers.x(),center_between_markers.y(), center_between_markers.z());
+  ROS_INFO("Position in quadcopter frame: (%f, %f, %f)", average_pos.x(),average_pos.y(), average_pos.z());
 
   // We publish the transformation to tf tree
   target_stamped_transform.child_frame_id_ = "tracking_target";
   target_stamped_transform.frame_id_ = uav_base_link_;
   target_stamped_transform.stamp_ = ros::Time::now();
-  target_stamped_transform.setOrigin(center_between_markers);
-  target_stamped_transform.setRotation(interpolated_quaternion);
+  target_stamped_transform.setOrigin(average_pos);
+  target_stamped_transform.setRotation(average_q);
 
   m_tf_broadcaster.sendTransform(target_stamped_transform);
 

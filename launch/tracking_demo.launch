@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
-  <include file="$(find ar_sys)/launch/single_board_filtered_ardrone.launch" />
+  <include file="$(find tud_momana)/launch/ar_sys_multi_boards_external.launch" />
 
   <node pkg="tud_coop_uv" name="joy_control" type="joy_control"/>
 
@@ -18,5 +18,7 @@
   <node pkg="tud_coop_uv" name="merge" type="merge" output="screen" />
 
   <node pkg="tud_coop_uv" name="tracking" type="tracking" output="screen" />
+
+  <node pkg="tud_coop_uv" name="define_target" type="define_target" output="screen" />
 
 </launch>

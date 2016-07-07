@@ -14,6 +14,8 @@
 #include "tf/transform_datatypes.h"
 #include "visualization_msgs/Marker.h"
 
+#define _DEG2RAD 0.01745331111
+
 class DefineTargetNode {
  public:
   DefineTargetNode();
