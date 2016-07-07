@@ -49,7 +49,7 @@ void joyCallback(const sensor_msgs::Joy& in)
     geometry_msgs::Twist out_twist;
     velx   = double(in.axes[1]);
     vely   = double(in.axes[0]);
-    height = double(in.axes[2])*3;
+    height = double(in.axes[4]);
     angz   = double(in.axes[3]);
     buttonEnable = bool(in.buttons[0]);
     buttonLand = bool(in.buttons[1]);
@@ -128,10 +128,7 @@ int main(int argc,char* argv[])
     ros::init(argc, argv, "joy_control"); // Name of the node
     ros::NodeHandle nh;
 
-
-
     buttonTakeoff_pressed_instant = ros::Time::now();
-
     set_controller_client = nh.serviceClient<tud_coop_uv::SetController>("tud_coop_uv/set_controller");
     cmd_vel_sub = nh.subscribe("/joy",1,joyCallback);
     twist_pub   = nh.advertise<geometry_msgs::Twist>("/joy/cmd_vel", 1);
