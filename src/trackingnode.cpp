@@ -1,86 +1,107 @@
 #include "tud_coop_uv/trackingnode.hpp"
 
 TrackingNode::TrackingNode() {
-  //! TODO new parameter
-  //! set_target:
-  //!   values: marker_frame, middle, centered on one with view of the others.
+  // ROS parameters definition
+  nh_.param<double>("ref_quadcopter_height", ref_quadcopter_height_, 1.2); // in meters
 
-  m_quad_vel_sub =
-      nh.subscribe("/ardrone/odometry", 1, &TrackingNode::quad_OdomCallback,
+  quad_odom_sub_ =
+      nh_.subscribe("/ardrone/odometry", 1, &TrackingNode::quad_OdomCallback,
                    this, ros::TransportHints().tcpNoDelay());
 
-  cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/tracking/cmd_vel", 1);
-  debug_pub_ = nh.advertise<std_msgs::Float64>("/pid/debug", 1);
+  cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("/tracking/cmd_vel", 1);
+  debug_pub_ = nh_.advertise<std_msgs::Float64>("/debug", 1);
   cmd_vel_marker_pub_ =
-      nh.advertise<visualization_msgs::Marker>("/cmd_vel_marker", 1);
+      nh_.advertise<visualization_msgs::Marker>("/cmd_vel_marker", 1);
 }
 
 void TrackingNode::quad_OdomCallback(const nav_msgs::Odometry& odo_msg) {
   // With each incoming odometry message we try to find a
   // transformation to the target and then do the tracking
   odo_msg_ = odo_msg;
-  tf::Point target_point = get_target_point();
-  tracking_control(target_point);
-  //for debugging
-  //std_msgs::Float64 debug_msg;
+  tf::Pose target_pose;
+  bool valid_pose;
+  valid_pose = get_target_pose(target_pose);
+  if (valid_pose) {
+    tracking_control(target_pose);
+  } else {
+    //! HOVER
+    set_hover();
+  }
+
+  // for debugging
+  // std_msgs::Float64 debug_msg;
   // debug_msg.data = m_filtered_vel_x;
   // m_debug_pub.publish(debug_msg);
 }
 
-tf::Point TrackingNode::get_target_point(void){
-  //Transformation from target frame to quad_base
+bool TrackingNode::get_target_pose(tf::Pose& target_pose) {
+  // Transformation from target frame to quad_base
+
+  // Clear the target_pose variable
+  target_pose.setIdentity();
+
   tf::StampedTransform base_to_target;
   ros::Time now = ros::Time::now();
+
+  // We look for a transformation betwwen quadcopter_base_link and
+  // tracking_target
   try {
-    tf_listener_.waitForTransform("/ardrone_base_link", "/tracking_target",  now, ros::Duration(0.50));
-    tf_listener_.lookupTransform("/ardrone_base_link", "/tracking_target", now, base_to_target);
-    ROS_INFO("Parent Frame: %s, Child frame: %s", base_to_target.frame_id_.c_str(), base_to_target.child_frame_id_.c_str());
+    tf_listener_.waitForTransform("/ardrone_base_link", "/tracking_target", now,
+                                  ros::Duration(0.50));
+    tf_listener_.lookupTransform("/ardrone_base_link", "/tracking_target", now,
+                                 base_to_target);
+    // ROS_DEBUG("tracking_node | Parent Frame: %s, Child frame: %s",
+    // base_to_target.frame_id_.c_str(),
+    // base_to_target.child_frame_id_.c_str());
   } catch (tf::TransformException& ex) {
     ROS_ERROR("%s", ex.what());
-    return base_to_target.getOrigin();
+    // if we dont have a valid transformation return false
+    return false;
   }
-    // Now we create a new fixed frame transformation: /ardrone_base_link_fixed
-    // This will give us an ardrone frame that only changes in yaw
-    // in the same position of the /ardrone_base_link frame
-    double roll, pitch, yaw;
-    tf::StampedTransform stampedTransform_fixed;
-    tf::Transform target_to_fixed, base_to_fixed;
-    base_to_target.inverse().getBasis().getRPY(roll, pitch, yaw);
-    target_to_fixed.setOrigin(base_to_target.inverse().getOrigin());
-    target_to_fixed.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, yaw));
 
+  // Now we create a new fixed frame transformation: /ardrone_base_link_fixed
+  // This will give us an ardrone frame that only changes in yaw
+  // in the same position of the /ardrone_base_link frame
+  double roll, pitch, yaw;
+  tf::StampedTransform stampedTransform_fixed;
+  tf::Transform target_to_fixed, base_to_fixed;
 
-    base_to_fixed = base_to_target*target_to_fixed;
+  base_to_target.inverse().getBasis().getRPY(roll, pitch, yaw);
+  target_to_fixed.setOrigin(base_to_target.inverse().getOrigin());
+  target_to_fixed.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, yaw));
+  base_to_fixed = base_to_target * target_to_fixed;
 
-    // We publish the new stamped transform for RVIZ
-    stampedTransform_fixed.child_frame_id_ = "/ardrone_base_link_fixed";
-    stampedTransform_fixed.frame_id_ = "/ardrone_base_link";
-    stampedTransform_fixed.setData(base_to_fixed);
-    stampedTransform_fixed.stamp_ = ros::Time::now();
-    m_tf_broadcaster.sendTransform(stampedTransform_fixed);
+  // We publish the new stamped transform to the TF server
+  stampedTransform_fixed.child_frame_id_ = "/ardrone_base_link_fixed";
+  stampedTransform_fixed.frame_id_ = "/ardrone_base_link";
+  stampedTransform_fixed.setData(base_to_fixed);
+  stampedTransform_fixed.stamp_ = ros::Time::now();
+  tf_broadcaster_.sendTransform(stampedTransform_fixed);
 
-    // Obtain marker position in ardrone fixed frame
-    tf::Pose flight_target;
-    tf::Vector3 marker_position(0, 0, 0);
+  // Obtain tracking_target pose in ardrone fixed frame
+  // this is the final output of the function
+  target_pose = target_to_fixed.inverse() * target_pose;
 
-    //! TODO implement pose tracking
-    flight_target = target_to_fixed.inverse() *flight_target;
-    marker_position = flight_target.getOrigin();
-    marker_position.setZ(0.0);
+  // We draw a tracking arrow in RVIZ for visual reference
+  tf::Vector3 marker_position = target_pose.getOrigin();
+  marker_position.setZ(0.0);
+  draw_arrow_rviz(marker_position);
 
-    // We draw a tracking arrow in RVIZ for visual reference
-    draw_arrow_rviz(marker_position);
-  return marker_position;
+  return true;
 }
 
-void TrackingNode::tracking_control(tf::Vector3& tracking_point) {
+void TrackingNode::tracking_control(tf::Pose target_pose) {
   // In the frame /ardrone_base_link_fixed
-  double velx;
-  double vely;
+  double velx, vely, velz, px, py, pz, pyaw;
+  double height_error, current_height;
+  tf::Point target_point = target_pose.getOrigin();
+  // target_point.setZ(0.0);
 
-  velx = tracking_point.x() * 0.75;
-  vely = tracking_point.y() * 0.75;
-
+  //! position controller
+  px = py = 0.75;
+  velx = target_point.x() * px;
+  vely = target_point.y() * py;
+  // limit maximum module of speed
   double norm = sqrt(velx * velx + vely * vely);
   //!Completly arbitrary number (change with ros_param)
   if (norm > 0.4) {
@@ -88,11 +109,40 @@ void TrackingNode::tracking_control(tf::Vector3& tracking_point) {
     vely = (vely / norm) * 0.4;
   }
 
+  //! Yaw controller
+  double error_yaw, yaw_ang_speed;
+  error_yaw = tf::getYaw(target_pose.getRotation());
+  pyaw = 0.2;
+  yaw_ang_speed = error_yaw * pyaw;
+
+  // for debugging
+  std_msgs::Float64 debug_msg;
+  debug_msg.data = yaw_ang_speed;
+  debug_pub_.publish(debug_msg);
+  // limit max angular speed
+  yaw_ang_speed = std::max(std::min(yaw_ang_speed, 0.2), -0.2);
+
+  //! height controller
+  pz = 0.25;
+  current_height = -target_point.z();
+  height_error = ref_quadcopter_height_ - current_height;
+  velz = height_error * pz;
+  // limit max vertical speed
+  velz = std::max(std::min(height_error, 0.2), -0.2);
+
+  // ROS_INFO("----------------------------");
+  // ROS_INFO("current_height:  %f | expected_height:  %f | height_error:  %f |
+  // ", current_height, expected_height, height_error);
+  // ROS_INFO("velz:  %f", velz);
+  // ROS_INFO("----------------------------");
+
   geometry_msgs::Twist cmd_vel_out;
   cmd_vel_out.linear.x = velx;
   cmd_vel_out.linear.y = vely;
+  cmd_vel_out.linear.z = velz;
+  cmd_vel_out.angular.z = yaw_ang_speed;
   cmd_vel_pub_.publish(cmd_vel_out);
-  //draw_arrow_rviz(tracking_point);
+  // draw_arrow_rviz(tracking_point);
 }
 
 void TrackingNode::draw_arrow_rviz(tf::Vector3& endpoint) {
@@ -131,46 +181,48 @@ void TrackingNode::draw_arrow_rviz(tf::Vector3& endpoint) {
 
 void TrackingNode::arsys_marker_pose_callback(
     const geometry_msgs::PoseStamped& marker_pose_msg) {
-//  tf::StampedTransform transform_ardrone_board;  // boardFiltered ->
-//                                                 // ardrone_base_bottomcam ->
-//                                                 // ardrone_base_link
-//  try {
-//    tf_listener_.lookupTransform("/boardFiltered", "/ardrone_base_link",
-//                                  ros::Time(0), transform_ardrone_board);
+  //  tf::StampedTransform transform_ardrone_board;  // boardFiltered ->
+  //                                                 // ardrone_base_bottomcam
+  //                                                 ->
+  //                                                 // ardrone_base_link
+  //  try {
+  //    tf_listener_.lookupTransform("/boardFiltered", "/ardrone_base_link",
+  //                                  ros::Time(0), transform_ardrone_board);
 
-//  } catch (tf::TransformException& ex) {
-//    ROS_ERROR("%s", ex.what());
-//  }
+  //  } catch (tf::TransformException& ex) {
+  //    ROS_ERROR("%s", ex.what());
+  //  }
 
-//  // Now we create a new fixed frame transformation: /ardrone_base_link_fixed
-//  // This will give us an ardrone frame that only changes in yaw
-//  // in the same position of the /ardrone_base_link frame
-//  double roll, pitch, yaw;
-//  tf::StampedTransform stampedTransform_fixed;
-//  tf::Transform transform_fixed;
-//  transform_ardrone_board.getBasis().getRPY(roll, pitch, yaw);
+  //  // Now we create a new fixed frame transformation:
+  //  /ardrone_base_link_fixed
+  //  // This will give us an ardrone frame that only changes in yaw
+  //  // in the same position of the /ardrone_base_link frame
+  //  double roll, pitch, yaw;
+  //  tf::StampedTransform stampedTransform_fixed;
+  //  tf::Transform transform_fixed;
+  //  transform_ardrone_board.getBasis().getRPY(roll, pitch, yaw);
 
-//  transform_fixed.setOrigin(transform_ardrone_board.getOrigin());
-//  transform_fixed.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, yaw));
+  //  transform_fixed.setOrigin(transform_ardrone_board.getOrigin());
+  //  transform_fixed.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, yaw));
 
-//  // We publish the new stamped transform for RVIZ
-//  stampedTransform_fixed.child_frame_id_ = "/ardrone_base_link_fixed";
-//  stampedTransform_fixed.frame_id_ = "/boardFiltered";
-//  stampedTransform_fixed.setData(transform_fixed);
-//  stampedTransform_fixed.stamp_ = ros::Time::now();
-//  m_tf_broadcaster.sendTransform(stampedTransform_fixed);
+  //  // We publish the new stamped transform for RVIZ
+  //  stampedTransform_fixed.child_frame_id_ = "/ardrone_base_link_fixed";
+  //  stampedTransform_fixed.frame_id_ = "/boardFiltered";
+  //  stampedTransform_fixed.setData(transform_fixed);
+  //  stampedTransform_fixed.stamp_ = ros::Time::now();
+  //  m_tf_broadcaster.sendTransform(stampedTransform_fixed);
 
-//  // Obtain marker position in ardrone fixed frame
-//  tf::Vector3 marker_position(0, 0, 0);
-//  marker_position = stampedTransform_fixed.inverse() * marker_position;
+  //  // Obtain marker position in ardrone fixed frame
+  //  tf::Vector3 marker_position(0, 0, 0);
+  //  marker_position = stampedTransform_fixed.inverse() * marker_position;
 
-//  // We draw a tracking arrow in RVIZ for visual reference
-//  draw_arrow_rviz(marker_position);
+  //  // We draw a tracking arrow in RVIZ for visual reference
+  //  draw_arrow_rviz(marker_position);
 
-//  // Now we do the tracking
-//  tracking_control(marker_position);
+  //  // Now we do the tracking
+  //  tracking_control(marker_position);
 
-//  //! TODO implement orientation PID controller using yaw variable
+  //  //! TODO implement orientation PID controller using yaw variable
 }
 
 void TrackingNode::set_hover(void) {
