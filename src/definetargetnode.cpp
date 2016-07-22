@@ -4,12 +4,12 @@ DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
   // if only one ARSYS marker
   time_last_tf_message_ = ros::Time::now();
   //default names initialization
-  default_ugv_robot_names_.push_back("/c3po");
-  default_ugv_robot_names_.push_back("/r2d2");
-  default_ugv_robot_names_.push_back("/undefined_robot");
-  default_ugv_robot_names_.push_back("/undefined_robot");
-  default_ugv_robot_names_.push_back("/undefined_robot");
-  default_ugv_robot_names_.push_back("/undefined_robot");
+  default_ugv_robot_names_.push_back("c3po");
+  default_ugv_robot_names_.push_back("r2d2");
+  default_ugv_robot_names_.push_back("undefined_robot");
+  default_ugv_robot_names_.push_back("undefined_robot");
+  default_ugv_robot_names_.push_back("undefined_robot");
+  default_ugv_robot_names_.push_back("undefined_robot");
 
   //! UGV stands for unmanned ground vehicle
   //! UAV stands for unmanned aerial vehicle
@@ -40,7 +40,7 @@ DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
   for (int i=0; i<n_ugv_; i++){
     nh_.param<std::string>("ugv_frame_ugv_"+i, ugv_frame, default_ugv_robot_names_[i]);
     ugv_frames_.push_back(ugv_frame);
-    ugv_marker_frames_.push_back(ugv_frame + "/top_marker");
+    ugv_marker_frames_.push_back(ugv_frame + "_marker_top");
     check_received_markers_[ugv_marker_frames_[i]] = false;
   }
 
@@ -69,8 +69,8 @@ void DefineTargetNode::arsys_transform_callback(
   tf::StampedTransform stampedTransform_in;  
   tf::transformStampedMsgToTF(transformMsg, stampedTransform_in);
 
-  ROS_INFO("Received Board %s: sec: %i, nsec: %i", transformMsg.child_frame_id.c_str(),
-           transformMsg.header.stamp.sec, transformMsg.header.stamp.nsec);
+  //ROS_INFO("Received Board %s: sec: %i, nsec: %i", transformMsg.child_frame_id.c_str(),
+  //         transformMsg.header.stamp.sec, transformMsg.header.stamp.nsec);
 
   // Check if Id is valid
   std::string frame_id = transformMsg.child_frame_id;
@@ -178,9 +178,9 @@ void DefineTargetNode::calculate_target_pose(void) {
                                    pose_marker_in_quad_frame[i]);
       tf::poseMsgToTF(pose_marker_in_quad_frame[i].pose, marker_tf[i]);
       marker_tf[i].getOrigin();
-      ROS_INFO("%s position in quadcopter frame: (%f, %f, %f)",
-               ugv_marker_frames_[i].c_str(), marker_tf[i].getOrigin().x(),
-               marker_tf[i].getOrigin().y(), marker_tf[i].getOrigin().z());
+      //ROS_INFO("%s position in quadcopter frame: (%f, %f, %f)",
+      //         ugv_marker_frames_[i].c_str(), marker_tf[i].getOrigin().x(),
+      //         marker_tf[i].getOrigin().y(), marker_tf[i].getOrigin().z());
     } catch (tf::TransformException& ex) {
       ROS_ERROR("%s", ex.what());
     }
@@ -204,7 +204,7 @@ void DefineTargetNode::calculate_target_pose(void) {
 //  tf::Quaternion interpolated_quaternion = quaternion_interpolation(
 //      marker_tf[0].getRotation(), marker_tf[1].getRotation(), 0.5);
   //tf::Vector3 target_position(x, y, z);
-  ROS_INFO("Position in quadcopter frame: (%f, %f, %f)", average_pos.x(),average_pos.y(), average_pos.z());
+  //ROS_INFO("Position in quadcopter frame: (%f, %f, %f)", average_pos.x(),average_pos.y(), average_pos.z());
 
   // We publish the transformation to tf tree
   target_stamped_transform.child_frame_id_ = "tracking_target";
