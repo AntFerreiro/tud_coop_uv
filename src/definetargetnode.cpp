@@ -136,7 +136,8 @@ void DefineTargetNode::arsys_transform_callback(
       }
     }
     else{
-      ROS_INFO("The system is defined for %i UGVs but only %i markers were detected in the image", n_ugv_, number_of_received_markers_);
+      ROS_ERROR_ONCE("The system is defined for %i UGVs but only %i markers were detected in the image", n_ugv_, number_of_received_markers_);
+      ROS_DEBUG("The system is defined for %i UGVs but only %i markers were detected in the image", n_ugv_, number_of_received_markers_);
       clean_marker_vars();
       //check the new marker in the map
       check_received_markers_[transformMsg.child_frame_id] = true;
