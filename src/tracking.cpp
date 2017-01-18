@@ -5,12 +5,12 @@ int main(int argc,char* argv[])
     ros::init(argc, argv, "tracking"); // Name of the node
     TrackingNode Node;
 
-    //int32_t looprate = 1000; //hz
-    //ros::Rate loop_rate(looprate);
+    int32_t looprate = 1000; //hz
+    ros::Rate loop_rate(looprate);
 
     //ros::spin();
-    while(Node.nh.ok()){
+    while(Node.nh_.ok()){
         ros::spinOnce();
-        //loop_rate.sleep();
+        loop_rate.sleep();
         }
 }

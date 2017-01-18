@@ -32,7 +32,15 @@ void MergeNode::merge_cmd_vel(void){
                 m_cmd_vel_coverage.linear.z +
                 m_cmd_vel_joy.linear.z;
 
-        //! I have to decide if orientation is integrated in this message.
+        if (std::abs(m_cmd_vel_joy.angular.z) > 0.01){
+          cmd_vel_out.angular.z = m_cmd_vel_joy.angular.z;
+        }
+        else{
+          cmd_vel_out.angular.z = m_cmd_vel_tracking.angular.z +
+                  m_cmd_vel_coverage.angular.z;
+        }
+        //hack for manual angular control during joint control
+        //cmd_vel_out.angular.z = m_cmd_vel_joy.angular.z;
     }
      m_cmd_vel_pub.publish(cmd_vel_out);
 }
