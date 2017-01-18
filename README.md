@@ -95,7 +95,7 @@ roslaunch tud_coop_uv tracking_demo_bottom_ardrone.launch
 ## System description
 
 ## Flowchart
-![Flowchart of the system](https://mega.nz/#!KoUWmBiI!yR1KqyE7A0g-LAogiiLU6HBjgavP7_KQodqQuTWA0Rg)
+![Flowchart of the system](https://s27.postimg.org/y019jocnn/tud_coop_uv_flowchart.jpg)
 
 ## Node description
 
