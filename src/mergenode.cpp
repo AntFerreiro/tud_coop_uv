@@ -39,6 +39,8 @@ void MergeNode::merge_cmd_vel(void){
           cmd_vel_out.angular.z = m_cmd_vel_tracking.angular.z +
                   m_cmd_vel_coverage.angular.z;
         }
+        //hack for total angular control
+        cmd_vel_out.angular.z = m_cmd_vel_joy.angular.z;
     }
      m_cmd_vel_pub.publish(cmd_vel_out);
 }

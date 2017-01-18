@@ -2,7 +2,7 @@
 
 TrackingNode::TrackingNode() {
   // ROS parameters definition
-  nh_.param<double>("ref_quadcopter_height", ref_quadcopter_height_, 1.2); // in meters
+  nh_.param<double>("ref_quadcopter_height", ref_quadcopter_height_, 1.1); // in meters
 
   quad_odom_sub_ =
       nh_.subscribe("/ardrone/odometry", 1, &TrackingNode::quad_OdomCallback,
@@ -123,7 +123,7 @@ void TrackingNode::tracking_control(tf::Pose target_pose) {
   yaw_ang_speed = std::max(std::min(yaw_ang_speed, 0.2), -0.2);
 
   //! height controller
-  pz = 0.25;
+  pz = 0.3;
   current_height = -target_point.z();
   height_error = ref_quadcopter_height_ - current_height;
   velz = height_error * pz;

@@ -22,11 +22,12 @@ bool buttonEnable = false;
 bool buttonControlJoy = false;
 bool buttonControlTracking = false;
 bool buttonControlJoint = false;
+bool buttonReset = false;
 
 std_msgs::Empty empty;
 
 ros::Subscriber cmd_vel_sub;
-ros::Publisher twist_pub, takeoff_pub, land_pub;
+ros::Publisher twist_pub, takeoff_pub, land_pub, reset_pub;
 ros::ServiceClient set_controller_client;
 tud_coop_uv::SetController srv;
 
@@ -56,6 +57,7 @@ void joyCallback(const sensor_msgs::Joy& in) {
   buttonControlJoy = bool(in.buttons[3]);
   buttonControlTracking = bool(in.buttons[4]);
   buttonControlJoint = bool(in.buttons[5]);
+  buttonReset = bool(in.buttons[6]);
 
   if (buttonControlJoy || buttonControlTracking || buttonControlJoint) {
     if (buttonControlJoy) {
@@ -91,6 +93,12 @@ void joyCallback(const sensor_msgs::Joy& in) {
     land_pub.publish(empty);
   }
 
+  if (buttonReset) {
+    ROS_INFO("Sending reset command");
+    reset_pub.publish(empty);
+  }
+
+
   out_twist.linear.x = velx;
   out_twist.linear.y = vely;
   out_twist.linear.z = height;
@@ -120,6 +128,7 @@ int main(int argc, char* argv[]) {
   twist_pub = nh.advertise<geometry_msgs::Twist>("/joy/cmd_vel", 1);
   takeoff_pub = nh.advertise<std_msgs::Empty>("/ardrone/takeoff", 1);
   land_pub = nh.advertise<std_msgs::Empty>("/ardrone/land", 1);
+  reset_pub = nh.advertise<std_msgs::Empty>("/ardrone/reset", 1);
   ros::Rate rate(10);  // 10 hz
 
   while (nh.ok()) {

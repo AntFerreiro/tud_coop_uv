@@ -98,10 +98,10 @@ void DefineTargetNode::arsys_transform_callback(
   } else {
     // We broadcast the transformations to the TF Server
     // Original transformation without filter
-    m_tf_broadcaster.sendTransform(stampedTransform_in);
+    //m_tf_broadcaster.sendTransform(stampedTransform_in);
   }
 
-  ros::spinOnce();
+  //ros::spinOnce();
 
   // is this the first marker?
   if(number_of_received_markers_ == 0){
