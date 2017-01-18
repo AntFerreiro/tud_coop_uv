@@ -189,54 +189,76 @@ This nodes merges velocity references from different sources. This allow the use
 #### Button configuration for Logitech Wingman controller:
 
 buttons
-0 - A  --function: Enable/disbale flying with integrated hovering functionality (using the ardrone visual odometry for hovering)
-1 - B  --function: Send landing command
-2 - C  --function: Send takeoff command
-3 - X  --function: Set controller as Joystick input only
-4 - Y  --function: Set controller as Autonomous Tracking only
-5 - Z  --function: Set controller as joint (sum of tracking and joy commands)
-6 - L1  --function: Send reset command
-7 - L2
-8 - Start
-9 - L2
-10 - R2
+- 0 - A
+  - Enable/disable flying with integrated hovering functionality (using the ardrone visual odometry for hovering)
+- 1 - B
+  - Send landing command
+- 2 - C
+  - Send takeoff command
+- 3 - X
+  - Set controller as Joystick input only
+- 4 - Y  
+  - Set controller as Autonomous Tracking only
+- 5 - Z
+  - Set controller as joint (sum of tracking and joy commands)
+- 6 - L1
+  - Send reset command
+- 7 - L2
+- 8 - Start
+- 9 - L2
+- 10 - R2
 
 Axes
 
-0 - Left X   --function: twist_msg.linear.y
-1 - Left Y   --function: twist_msg.linear.x
-2 - Slider
-3 - Right X  --function: twist_msg.angular.z (Rotation around Z)
-4 - Right Y  --function: twist_msg.linear.z (actual velocity in Z)
-5 - Right T
-6 - Left and Right arrow
-7 - Up and down arrow
+- 0 - Left X
+  - twist_msg.linear.y
+- 1 - Left Y
+  - twist_msg.linear.x
+- 2 - Slider
+- 3 - Right X
+  - twist_msg.angular.z (Rotation around Z)
+- 4 - Right Y
+  - twist_msg.linear.z (actual velocity in Z)
+- 5 - Right T
+- 6 - Left and Right arrow
+- 7 - Up and down arrow
 
 
 #### Button configuration for Logitech Wireless Gamepad F710:
 
-0 - A (green)  --function: Enable/disbale flying with integrated hovering functionality (using the ardrone visual odometry for hovering)
-1 - B (red)  --function: Send landing command
-2 - X (blue)  --function: Send takeoff command
-3 - Y (Yellow) --function: Set controller as Joystick input only
-4 - LB  --function: Set controller as Autonomous Tracking only
-5 - RB  --function: Set controller as joint (sum of tracking and joy commands)
-6 - back  --function: Send reset command
-7 - start
-8 -
-9 - Left Joy press
-10 - Right joy press
+- 0 - A (green)
+  - Enable/disable flying with integrated hovering functionality (using the ardrone visual odometry for hovering)
+- 1 - B (red)
+  - Send landing command
+- 2 - X (blue)
+  - Send takeoff command
+- 3 - Y (Yellow)
+  - Set controller as Joystick input only
+- 4 - LB
+  - Set controller as Autonomous Tracking only
+- 5 - RB
+  - Set controller as joint (sum of tracking and joy commands)
+- 6 - back
+  - Send reset command
+- 7 - start
+- 8 -
+- 9 - Left Joy press
+- 10 - Right joy press
 
 Axes
 
-0 - Left X   --function: twist_msg.linear.y
-1 - Left Y   --function: twist_msg.linear.
-2 - Left T
-3 - Right X  --function: twist_msg.angular.z (Rotation around Z)
-4 - Right Y  --function: twist_msg.linear.z (actual velocity in Z)
-5 - Right T
-6 - Left and Right arrow
-7 - Up and down arrow
+- 0 - Left X
+  - twist_msg.linear.y
+- 1 - Left Y
+  - twist_msg.linear.
+- 2 - Left T
+- 3 - Right X
+  - twist_msg.angular.z (Rotation around Z)
+- 4 - Right Y
+  - twist_msg.linear.z (actual velocity in Z)
+- 5 - Right T
+- 6 - Left and Right arrow
+- 7 - Up and down arrow
 
 ### coverage
 Not yet implemented.
