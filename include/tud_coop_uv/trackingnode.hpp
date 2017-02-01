@@ -13,6 +13,9 @@
 #include "tf/transform_datatypes.h"
 #include "visualization_msgs/Marker.h"
 
+#include <dynamic_reconfigure/server.h>
+#include <tud_coop_uv/tracking_dynamic_param_configConfig.h>
+
 
 
 class TrackingNode
@@ -25,6 +28,10 @@ public:
     void quad_OdomCallback(const nav_msgs::Odometry& odo_msg);
     void arsys_marker_pose_callback(const geometry_msgs::PoseStamped& marker_pose_msg);
     void arsys_transform_callback(const geometry_msgs::TransformStamped& transformMsg);
+
+    // ROS dynamic reconfigure callback
+    void dynamicReconfigureCb(
+        tud_coop_uv::tracking_dynamic_param_configConfig& config, uint32_t level);
 
     // tracking_node functions
     bool get_target_pose(tf::Pose& target_pose);
@@ -43,7 +50,17 @@ private:
     tf::TransformBroadcaster tf_broadcaster_;
     tf::TransformListener tf_listener_;
 
+    // dynamic reconfigure server
+    dynamic_reconfigure::Server<tud_coop_uv::tracking_dynamic_param_configConfig>
+        server_;
+
     double ref_quadcopter_height_;
+
+    double max_linear_velocity_, max_yaw_velocity_, max_z_velocity_;
+    double kp_x_, ki_x_, kd_x_;
+    double kp_y_, ki_y_, kd_y_;
+    double kp_z_, ki_z_, kd_z_;
+    double kp_yaw_, ki_yaw_, kd_yaw_;
 };
 
 #endif // TRACKINGNODE_HPP

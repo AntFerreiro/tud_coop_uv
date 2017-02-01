@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
-  <include file="$(find tud_coop_uv)/launch/ar_sys_multi_boards_bottom_ardrone.launch" />
+  <include file="$(find tud_coop_uv)/launch/ar_sys_multi_boards_external.launch" />
 
   <node pkg="tud_coop_uv" name="joy_control" type="joy_control"/>
 

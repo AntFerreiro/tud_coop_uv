@@ -4,6 +4,9 @@ DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
   // if only one ARSYS marker
   time_last_tf_message_ = ros::Time::now();
   //default names initialization
+  // This should be the names of the markerboards in arsys
+  // It is also the name of the coordinate frames of each marker
+
   default_ugv_robot_names_.push_back("c3po");
   default_ugv_robot_names_.push_back("r2d2");
   default_ugv_robot_names_.push_back("undefined_robot");
@@ -29,7 +32,7 @@ DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
   //! TODO(racuna) fix filtering
   nh_.param<bool>("filter_tf", filter_tf_, false);
 
-  // Number of markers on top of UGV to be expected
+  // Number of tracked objects to be expected (one marker or makerboard for each one)
   nh_.param<int>("n_ugv", n_ugv_, 2);
   if(n_ugv_ < 1 || n_ugv_ > 6){
     ROS_ERROR("This node works with a minimum of 1 and a maximun of 6 UGV (Unmanned Ground Vehicles)");
@@ -53,6 +56,9 @@ void DefineTargetNode::arsys_transform_callback(
   //! This message comes from the ar_sys package.
   //! It has the transform of a board_frame to the camera_frame
   //! ar_sys will send one message for each board detected in an image
+  //! THe chidl_frame_id is the frame of the detected marker or marker board
+  //! this name is configured in ar_sys using the parameters in the launch file
+  //! The parent frame is the camera frame
 //  tf::StampedTransform tf_base_cam = tf::StampedTransform(
 //                     tf::Transform(
 //                       tf::createQuaternionFromRPY(0.0, 180.0 * _DEG2RAD, 90.0 * _DEG2RAD),
@@ -81,6 +87,7 @@ void DefineTargetNode::arsys_transform_callback(
     }
   }
   if(!frame_is_wanted){
+    // If the frame is not in the list of wanted frames then we dont process this transform.
     return;
   }
 
@@ -101,8 +108,9 @@ void DefineTargetNode::arsys_transform_callback(
     //m_tf_broadcaster.sendTransform(stampedTransform_in);
   }
 
-  //ros::spinOnce();
-
+  //! When we are checking for more than one marker (to do joint tracking) then
+  //! we need to check if all the markers are available in a particular image
+  //! we compare all the frames with the required ones
   // is this the first marker?
   if(number_of_received_markers_ == 0){
     // then check the name in the map

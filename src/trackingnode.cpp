@@ -1,9 +1,6 @@
 #include "tud_coop_uv/trackingnode.hpp"
 
 TrackingNode::TrackingNode() {
-  // ROS parameters definition
-  nh_.param<double>("ref_quadcopter_height", ref_quadcopter_height_, 1.1); // in meters
-
   quad_odom_sub_ =
       nh_.subscribe("/ardrone/odometry", 1, &TrackingNode::quad_OdomCallback,
                    this, ros::TransportHints().tcpNoDelay());
@@ -12,6 +9,39 @@ TrackingNode::TrackingNode() {
   debug_pub_ = nh_.advertise<std_msgs::Float64>("/debug", 1);
   cmd_vel_marker_pub_ =
       nh_.advertise<visualization_msgs::Marker>("/cmd_vel_marker", 1);
+
+  // Dynamic parameter reconfigure
+  dynamic_reconfigure::Server<tud_coop_uv::tracking_dynamic_param_configConfig>::CallbackType f;
+  f = boost::bind(&TrackingNode::dynamicReconfigureCb, this, _1, _2);
+  server_.setCallback(f);
+}
+
+void TrackingNode::dynamicReconfigureCb(
+    tud_coop_uv::tracking_dynamic_param_configConfig& config, uint32_t level){
+
+  //ROS_INFO("Reconfigure Request: %d", config.marker_size);
+
+  ref_quadcopter_height_ = config.ref_quadcopter_height;
+
+  max_linear_velocity_ = config.max_linear_velocity;
+  max_yaw_velocity_ = config.max_yaw_velocity;
+  max_z_velocity_ = config.max_z_velocity;
+
+  kp_x_ = config.kp_x;
+  ki_x_ = config.ki_x;
+  kd_x_ = config.kd_x;
+
+  kp_y_ = config.kp_y;
+  ki_y_ = config.ki_y;
+  kd_y_ = config.kd_y;
+
+  kp_z_ = config.kp_z;
+  ki_z_ = config.ki_z;
+  kd_z_ = config.kd_z;
+
+  kp_yaw_ = config.kp_yaw;
+  ki_yaw_ = config.ki_yaw;
+  kd_yaw_ = config.kd_yaw;
 }
 
 void TrackingNode::quad_OdomCallback(const nav_msgs::Odometry& odo_msg) {
@@ -97,38 +127,35 @@ void TrackingNode::tracking_control(tf::Pose target_pose) {
   tf::Point target_point = target_pose.getOrigin();
   // target_point.setZ(0.0);
 
-  //! position controller
-  px = py = 0.75;
-  velx = target_point.x() * px;
-  vely = target_point.y() * py;
-  // limit maximum module of speed
+  //! position controller based on a velocity field
+  //! TODO(Raul) change into a pure position control without velocity control
+  velx = target_point.x() * kp_x_;
+  vely = target_point.y() * kp_y_;
+  // limit the module of speed
   double norm = sqrt(velx * velx + vely * vely);
-  //!Completly arbitrary number (change with ros_param)
-  if (norm > 0.4) {
-    velx = (velx / norm) * 0.4;
-    vely = (vely / norm) * 0.4;
+  if (norm > max_linear_velocity_) {
+    velx = (velx / norm) * max_linear_velocity_;
+    vely = (vely / norm) * max_linear_velocity_;
   }
 
   //! Yaw controller
   double error_yaw, yaw_ang_speed;
   error_yaw = tf::getYaw(target_pose.getRotation());
-  pyaw = 0.2;
-  yaw_ang_speed = error_yaw * pyaw;
+  yaw_ang_speed = error_yaw * kp_yaw_;
 
   // for debugging
   std_msgs::Float64 debug_msg;
   debug_msg.data = yaw_ang_speed;
   debug_pub_.publish(debug_msg);
   // limit max angular speed
-  yaw_ang_speed = std::max(std::min(yaw_ang_speed, 0.2), -0.2);
+  yaw_ang_speed = std::max(std::min(yaw_ang_speed, max_yaw_velocity_), -max_yaw_velocity_);
 
   //! height controller
-  pz = 0.3;
   current_height = -target_point.z();
   height_error = ref_quadcopter_height_ - current_height;
-  velz = height_error * pz;
+  velz = height_error * kp_z_;
   // limit max vertical speed
-  velz = std::max(std::min(height_error, 0.2), -0.2);
+  velz = std::max(std::min(height_error, max_z_velocity_), -max_z_velocity_);
 
   // ROS_INFO("----------------------------");
   // ROS_INFO("current_height:  %f | expected_height:  %f | height_error:  %f |

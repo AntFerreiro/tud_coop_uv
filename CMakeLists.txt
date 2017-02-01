@@ -11,6 +11,7 @@ set (CMAKE_C_FLAGS_DEBUG "-O0")
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+    dynamic_reconfigure
     geometry_msgs
     tf2_geometry_msgs
     roscpp
@@ -90,6 +91,32 @@ add_service_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(DEPENDENCIES  std_msgs)
+
+
+################################################
+## Declare ROS dynamic reconfigure parameters ##
+################################################
+
+## To declare and build dynamic reconfigure parameters within this
+## package, follow these steps:
+## * In the file package.xml:
+##   * add a build_depend and a run_depend tag for "dynamic_reconfigure"
+## * In this file (CMakeLists.txt):
+##   * add "dynamic_reconfigure" to
+##     find_package(catkin REQUIRED COMPONENTS ...)
+##   * uncomment the "generate_dynamic_reconfigure_options" section below
+##     and list every .cfg file to be processed
+
+## Generate dynamic reconfigure parameters in the 'cfg' folder
+# generate_dynamic_reconfigure_options(
+#   cfg/DynReconf1.cfg
+#   cfg/DynReconf2.cfg
+# )
+
+## Generate dynamic parameters
+generate_dynamic_reconfigure_options(
+  cfg/tracking_dynamic_param_config.cfg
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -176,7 +203,7 @@ add_executable(joy_control src/joy_control.cpp)
 ##add_dependencies(coop_uv_node coop_uv_generate_messages_cpp)
 add_dependencies(define_target tud_coop_uv_generate_messages_cpp)
 add_dependencies(merge tud_coop_uv_generate_messages_cpp)
-add_dependencies(tracking tud_coop_uv_generate_messages_cpp)
+add_dependencies(tracking tud_coop_uv_generate_messages_cpp ${PROJECT_NAME}_gencfg)
 add_dependencies(joy_control tud_coop_uv_generate_messages_cpp)
 add_dependencies(coverage tud_coop_uv_generate_messages_cpp)
 

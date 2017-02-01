@@ -47,10 +47,11 @@ void set_hover(void) {
 
 void joyCallback(const sensor_msgs::Joy& in) {
   geometry_msgs::Twist out_twist;
-  velx = double(in.axes[1]);
   vely = double(in.axes[0]);
-  height = double(in.axes[4]);
+  velx = double(in.axes[1]);
   angz = double(in.axes[3]);
+  height = double(in.axes[4]);
+
   buttonEnable = bool(in.buttons[0]);
   buttonLand = bool(in.buttons[1]);
   buttonTakeoff = bool(in.buttons[2]);
