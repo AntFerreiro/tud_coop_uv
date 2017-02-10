@@ -3,11 +3,9 @@
 
   <include file="$(find tud_coop_uv)/launch/ar_sys_multi_boards_external.launch" />
 
-
   <node pkg="tud_coop_uv" name="joy_control" type="joy_control"/>
 
   <!--node pkg="ardrone_velocity" name="pid_control" type="pid_control" output="screen" /-->
-  <include file="$(find ardrone_velocity_ekf)/launch/ardrone_velocity.launch" />
 
   <arg name="joy_dev" default="/dev/input/js0" />
 
@@ -17,12 +15,12 @@
     <param name="autorepeat_rate" value="20" />
   </node>
 
-  <node pkg="tud_coop_uv" name="merge" type="merge" output="screen"/>
+  <node pkg="tud_coop_uv" name="merge" type="merge" output="screen">
+    <param name="output_topic" value="/cmd_vel"/>
+  </node>
 
   <node pkg="tud_coop_uv" name="tracking" type="tracking" output="screen" />
 
-  <node pkg="tud_coop_uv" name="define_target" type="define_target" output="screen">
-    <param name="filter_tf" value="true"/>
-  </node>
+  <node pkg="tud_coop_uv" name="define_target" type="define_target" output="screen" />
 
 </launch>

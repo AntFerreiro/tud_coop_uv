@@ -3,6 +3,7 @@
 
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
+#include "geometry_msgs/TwistStamped.h"
 #include "tud_coop_uv/SetController.h"
 #include <unordered_map>
 
@@ -25,20 +26,21 @@ public:
 
 
 private:
-    ros::Subscriber m_tracking_sub;
-    ros::Subscriber m_coverage_sub;
-    ros::Subscriber m_joy_sub;
+    ros::Subscriber tracking_sub_;
+    ros::Subscriber coverage_sub_;
+    ros::Subscriber joy_sub_;
 
-    ros::Publisher m_cmd_vel_pub;
+    ros::Publisher cmd_vel_pub_;
+    ros::Publisher cmd_vel_stamped_pub_;
 
-    geometry_msgs::Twist m_cmd_vel_tracking;
-    geometry_msgs::Twist m_cmd_vel_coverage;
-    geometry_msgs::Twist m_cmd_vel_joy;
+    geometry_msgs::Twist cmd_vel_tracking_;
+    geometry_msgs::Twist cmd_vel_coverage_;
+    geometry_msgs::Twist cmd_vel_joy_;
 
-    ros::ServiceServer m_set_controller_srv;
+    ros::ServiceServer set_controller_srv_;
 
-    std::unordered_map<std::string,uint> m_available_controllers;
-    std::string m_current_controller;
+    std::unordered_map<std::string,uint> available_controllers_;
+    std::string current_controller_;
 };
 
 #endif // MERGENODE_HPP

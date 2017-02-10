@@ -160,10 +160,12 @@ set(DEFINETARGET_HEADER_FILES
 set(TRAKING_SOURCE_FILES
     src/tracking.cpp
     src/trackingnode.cpp
+    src/filter.cpp
 )
 
 set(TRAKING_HEADER_FILES
     include/tud_coop_uv/trackingnode.hpp
+    include/tud_coop_uv/filter.hpp
 )
 
 set(COVERAGE_SOURCE_FILES

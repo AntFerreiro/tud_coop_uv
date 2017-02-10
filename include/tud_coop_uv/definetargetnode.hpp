@@ -5,6 +5,7 @@
 #include "geometry_msgs/Twist.h"
 #include "nav_msgs/Odometry.h"
 #include "std_msgs/Float64.h"
+#include "std_msgs/Empty.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/TransformStamped.h"
@@ -45,7 +46,8 @@ class DefineTargetNode {
 
  private:
   ros::Subscriber arsys_transform_sub_;
-  ros::Publisher cmd_vel_marker_pub_;  //! For debugging cmd_vel in RVIZ
+  ros::Publisher target_updated_pub_;
+  ros::Publisher cmd_vel_marker_pub_;
   tf::TransformBroadcaster m_tf_broadcaster;
   tf::TransformListener m_tf_listener;
 

@@ -29,11 +29,12 @@ DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
   nh_.param<std::string>("uav_base_link_", uav_base_link_,
                          "/ardrone_base_link");
 
+
   //! TODO(racuna) fix filtering
   nh_.param<bool>("filter_tf", filter_tf_, false);
 
   // Number of tracked objects to be expected (one marker or makerboard for each one)
-  nh_.param<int>("n_ugv", n_ugv_, 2);
+  nh_.param<int>("n_ugv", n_ugv_, 1);
   if(n_ugv_ < 1 || n_ugv_ > 6){
     ROS_ERROR("This node works with a minimum of 1 and a maximun of 6 UGV (Unmanned Ground Vehicles)");
   }
@@ -49,6 +50,8 @@ DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
 
   arsys_transform_sub_ = nh_.subscribe(
       marker_tf_topic, 1, &DefineTargetNode::arsys_transform_callback, this);
+
+  target_updated_pub_ = nh_.advertise<std_msgs::Empty>("/define_target/target_updated", 1);
 }
 
 void DefineTargetNode::arsys_transform_callback(
@@ -226,6 +229,12 @@ void DefineTargetNode::calculate_target_pose(void) {
 
 
   //!The output of this is a new target transformation from Quadcopter base_link frame.
+  //!
+  //!
+
+  //We now broadcast a signal that we succesfully received a processed a target marker
+  std_msgs::Empty empty;
+  target_updated_pub_.publish(empty);
 }
 
 tf::Transform& DefineTargetNode::tf_interpolation(tf::Transform& new_tf,
