@@ -63,6 +63,7 @@ private:
     ros::Publisher cmd_vel_marker_pub_; //! For debugging cmd_vel in RVIZ
     ros::Publisher ardrone_land_pub_;
     ros::Publisher debug_pub_; //! For debugging variables in rqt_plot
+    ros::Publisher debug_land_; //! For debugging variables in rqt_plot
 
     nav_msgs::Odometry odo_msg_;
     tf::TransformBroadcaster tf_broadcaster_;
@@ -92,6 +93,8 @@ private:
     double kp_tilt_, ki_tilt_, kd_tilt_;
     double kp_z_, ki_z_, kd_z_;
     double kp_yaw_, ki_yaw_, kd_yaw_;
+
+    bool controlled_landing_;
 
     ros::Time t;
     ros::Time old_t;

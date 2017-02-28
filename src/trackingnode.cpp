@@ -5,7 +5,8 @@ TrackingNode::TrackingNode() {
                                      this, ros::TransportHints().tcpNoDelay());
 
   cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("/tracking/cmd_vel", 1);
-  debug_pub_ = nh_.advertise<geometry_msgs::Twist>("/debug", 1);
+  debug_pub_ = nh_.advertise<geometry_msgs::Twist>("/tracking/yaw_error", 1);
+  debug_land_ = nh_.advertise<geometry_msgs::Twist>("/tracking/land_sent", 1);
   cmd_vel_marker_pub_ =
       nh_.advertise<visualization_msgs::Marker>("/cmd_vel_marker", 1);
 
@@ -15,6 +16,7 @@ TrackingNode::TrackingNode() {
   dynamic_reconfigure::Server<tud_coop_uv::tracking_dynamic_param_configConfig>::CallbackType f;
   f = boost::bind(&TrackingNode::dynamicReconfigureCb, this, _1, _2);
   server_.setCallback(f);
+  controlled_landing_ = false;
 }
 
 void TrackingNode::dynamicReconfigureCb(
@@ -48,6 +50,8 @@ void TrackingNode::dynamicReconfigureCb(
   kp_yaw_ = config.kp_yaw;
   ki_yaw_ = config.ki_yaw;
   kd_yaw_ = config.kd_yaw;
+
+  controlled_landing_ = config.controlled_landing;
 }
 
 void TrackingNode::update_control(const std_msgs::Empty empty_msg){
@@ -142,6 +146,10 @@ void TrackingNode::tracking_control(tf::Pose& target_pose) {
   double error_yaw, yaw_ang_speed;
   error_yaw = tf::getYaw(target_pose.getRotation());
   yaw_ang_speed = error_yaw * kp_yaw_;
+  // for debugging
+  geometry_msgs::Twist debug_msg;
+  debug_msg.linear.x = error_yaw;
+  debug_pub_.publish(debug_msg);
 
   // limit max angular speed
   yaw_ang_speed = std::max(std::min(yaw_ang_speed, max_yaw_velocity_), -max_yaw_velocity_);
@@ -163,6 +171,8 @@ void TrackingNode::tracking_control(tf::Pose& target_pose) {
 
   cmd_vel_pub_.publish(cmd_vel_out);
   // draw_arrow_rviz(tracking_point);
+
+
 }
 
 
@@ -175,10 +185,10 @@ void TrackingNode::velxy_control(tf::Pose& target_pose, double& velx, double& ve
   vely = target_point.y() * kp_velxy_;
 
   // for debugging
-  geometry_msgs::Twist debug_msg;
-  debug_msg.linear.x = target_point.x();
-  debug_msg.linear.y = target_point.y();
-  debug_pub_.publish(debug_msg);
+//  geometry_msgs::Twist debug_msg;
+//  debug_msg.linear.x = target_point.x();
+//  debug_msg.linear.y = target_point.y();
+//  debug_pub_.publish(debug_msg);
 
 
   // limit the module of speed
@@ -225,11 +235,11 @@ void TrackingNode::tiltxy_control(tf::Pose& target_pose, double& tiltx, double& 
 
 
   // for debugging
-  geometry_msgs::Twist debug_msg;
-  debug_msg.linear.x = error_x;
-  debug_msg.linear.y = error_y;
-  debug_msg.linear.z = error_x_filtered_;
-  debug_pub_.publish(debug_msg);
+//  geometry_msgs::Twist debug_msg;
+//  debug_msg.linear.x = error_x;
+//  debug_msg.linear.y = error_y;
+//  debug_msg.linear.z = error_x_filtered_;
+//  debug_pub_.publish(debug_msg);
 
 
   last_error_x_ = error_x;
@@ -284,6 +294,40 @@ void TrackingNode::height_control(tf::Pose& target_pose, double& velz, ros::Dura
   velz = 0.0;
   tf::Point target_point = target_pose.getOrigin();
   current_height = -target_point.z(); //The marker position
+
+  if(controlled_landing_ == true){
+    velz = -0.15;
+    velz = std::max(std::min(velz, max_z_velocity_), -max_z_velocity_);
+    if(current_height < 0.40){
+      velz = -0.1;
+
+      if(current_height <0.30){
+        velz = -0.07;
+      }
+      if(current_height <0.25){
+        velz = 0.0;
+        // check for forced landing
+        double dx, dy, error;
+        dx = target_point.x();
+        dy = target_point.y();
+
+        error = sqrt(dx*dx + dy*dy);
+        if (sqrt(dx*dx) < 0.05 && sqrt(dy*dy) <0.05){
+
+          ROS_INFO("Sending forced land command, height: %f", current_height);
+          std_msgs::Empty empty;
+          ardrone_land_pub_.publish(empty);
+          // for debugging
+          geometry_msgs::Twist debug_msg;
+          debug_msg.linear.x = 5.0;
+          debug_land_.publish(debug_msg);
+        }
+      }
+
+
+    }
+    return;
+  }
 
   //We force bnlind landing if it is too close to the marker
 //  if(current_height < 0.5){
@@ -386,4 +430,5 @@ void TrackingNode::i_term_increase(double& i_term, double new_err, double cap)
   if(i_term > cap) i_term =  cap;
   if(i_term < -cap) i_term =  -cap;
 }
+
 

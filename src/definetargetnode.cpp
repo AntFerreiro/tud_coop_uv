@@ -1,50 +1,67 @@
 #include "tud_coop_uv/definetargetnode.hpp"
 
 DefineTargetNode::DefineTargetNode() : number_of_received_markers_(0) {
+  ros::NodeHandle params("~");
   // if only one ARSYS marker
   time_last_tf_message_ = ros::Time::now();
   //default names initialization
   // This should be the names of the markerboards in arsys
   // It is also the name of the coordinate frames of each marker
 
-  default_ugv_robot_names_.push_back("c3po");
-  default_ugv_robot_names_.push_back("r2d2");
-  default_ugv_robot_names_.push_back("undefined_robot");
-  default_ugv_robot_names_.push_back("undefined_robot");
-  default_ugv_robot_names_.push_back("undefined_robot");
-  default_ugv_robot_names_.push_back("undefined_robot");
+  //!TODO change this whole package naming system
+  //! it should not be based on robot names since the targets can be as well
+  //! fixed platforms, e.g a landing platform.
 
   //! UGV stands for unmanned ground vehicle
   //! UAV stands for unmanned aerial vehicle
 
   // Parameters definition
   std::string marker_tf_topic, marker_pose_topic;
+  std::string target_marker_name0, target_marker_name1, target_marker_name2, target_marker_name3;
 
-  nh_.param<std::string>("marker_tf_topic", marker_tf_topic,
+  //Default target names
+  params.param<std::string>("target_marker_name0", target_marker_name0, "c3po_marker_top");
+  params.param<std::string>("target_marker_name1", target_marker_name1, "r2d2_marker_top");
+  params.param<std::string>("target_marker_name2", target_marker_name2, "undefined");
+  params.param<std::string>("target_marker_name3", target_marker_name3, "undefined");
+
+  //Default topics to subscribe
+  params.param<std::string>("marker_tf_topic", marker_tf_topic,
                          "/ar_multi_boards/transform");
 
-  nh_.param<std::string>("marker_pose_topic", marker_pose_topic,
+  params.param<std::string>("marker_pose_topic", marker_pose_topic,
                          "/ar_multi_boards/pose");
 
-  nh_.param<std::string>("uav_base_link_", uav_base_link_,
+  params.param<std::string>("uav_base_link_", uav_base_link_,
                          "/ardrone_base_link");
 
 
+  default_ugv_robot_names_.push_back(target_marker_name0);
+  default_ugv_robot_names_.push_back(target_marker_name1);
+  default_ugv_robot_names_.push_back(target_marker_name2);
+  default_ugv_robot_names_.push_back(target_marker_name3);
+
+
   //! TODO(racuna) fix filtering
-  nh_.param<bool>("filter_tf", filter_tf_, false);
+  params.param<bool>("filter_tf", filter_tf_, false);
 
   // Number of tracked objects to be expected (one marker or makerboard for each one)
-  nh_.param<int>("n_ugv", n_ugv_, 1);
-  if(n_ugv_ < 1 || n_ugv_ > 6){
-    ROS_ERROR("This node works with a minimum of 1 and a maximun of 6 UGV (Unmanned Ground Vehicles)");
+  params.param<int>("n_ugv", n_ugv_, 1);
+  if(n_ugv_ < 1 || n_ugv_ > 4){
+    ROS_ERROR("This node works with a minimum of 1 and a maximun of 4 UGV (Unmanned Ground Vehicles)");
   }
 
   // Definition of UGV frames and their top_marker frames
-  std::string ugv_frame;
+//  std::string ugv_frame;
+//  for (int i=0; i<n_ugv_; i++){
+//    nh_.param<std::string>("ugv_frame_ugv_"+i, ugv_frame, default_ugv_robot_names_[i]);
+//    ugv_frames_.push_back(ugv_frame);
+//    ugv_marker_frames_.push_back(ugv_frame + "_marker_top");
+//    check_received_markers_[ugv_marker_frames_[i]] = false;
+//  }
+
   for (int i=0; i<n_ugv_; i++){
-    nh_.param<std::string>("ugv_frame_ugv_"+i, ugv_frame, default_ugv_robot_names_[i]);
-    ugv_frames_.push_back(ugv_frame);
-    ugv_marker_frames_.push_back(ugv_frame + "_marker_top");
+    ugv_marker_frames_.push_back(default_ugv_robot_names_[i]);
     check_received_markers_[ugv_marker_frames_[i]] = false;
   }
 

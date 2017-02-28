@@ -2,6 +2,7 @@
 <launch>
 
   <include file="$(find tud_coop_uv)/launch/ar_sys_multi_boards_external.launch" />
+  <include file="$(find tud_coop_uv)/launch/whycon.launch" />
 
 
   <node pkg="tud_coop_uv" name="joy_control" type="joy_control"/>
@@ -19,10 +20,15 @@
 
   <node pkg="tud_coop_uv" name="merge" type="merge" output="screen"/>
 
-  <node pkg="tud_coop_uv" name="tracking" type="tracking" output="screen" />
+  <node pkg="tud_coop_uv" name="tracking" type="tracking" output="screen">
+
+  </node>
 
   <node pkg="tud_coop_uv" name="define_target" type="define_target" output="screen">
-    <param name="filter_tf" value="true"/>
+    <param name="target_marker_name0" value="land_target"/>
+    <param name="filter_tf" value="false"/>
+    <param name="n_ugv" value="1"/>    
+    <param name="marker_tf_topic" value="/dynamic_marker/transform"/>
   </node>
 
 </launch>
