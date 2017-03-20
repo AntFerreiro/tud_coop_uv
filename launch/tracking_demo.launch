@@ -26,7 +26,7 @@
 
   <node pkg="tud_coop_uv" name="define_target" type="define_target" output="screen">
     <param name="target_marker_name0" value="land_target"/>
-    <param name="filter_tf" value="false"/>
+    <param name="filter_tf" value="true"/>
     <param name="n_ugv" value="1"/>    
     <param name="marker_tf_topic" value="/dynamic_marker/transform"/>
   </node>
