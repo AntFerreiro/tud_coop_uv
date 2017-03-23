@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <include file="$(find tud_coop_uv)/launch/ar_sys_multi_boards_bottom_ardrone.launch" />
+
+  <node pkg="tud_coop_uv" name="joy_control" type="joy_control"/>
+
+  <node pkg="ardrone_velocity" name="pid_control" type="pid_control" output="screen" />
+
+  <arg name="joy_dev" default="/dev/input/js0" />
+
+  <node pkg="joy" type="joy_node" name="joy_node">
+    <param name="dev" value="$(arg joy_dev)" />
+    <param name="deadzone" value="0.1" />
+    <param name="autorepeat_rate" value="20" />
+  </node>
+
+  <node pkg="tud_coop_uv" name="merge" type="merge" output="screen" />
+
+  <node pkg="tud_coop_uv" name="tracking" type="tracking" output="screen" />
+
+  <node pkg="tud_coop_uv" name="define_target" type="define_target" output="screen" />
+
+</launch>
