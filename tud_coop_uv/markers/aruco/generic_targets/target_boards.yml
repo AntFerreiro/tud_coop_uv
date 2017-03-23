@@ -1,0 +1,3 @@
+%YAML:1.0
+ar_sys_boards:
+   - { name:'land_target', path:"id00.yml", marker_size:0.16 }
