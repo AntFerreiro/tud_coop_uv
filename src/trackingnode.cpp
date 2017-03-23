@@ -5,10 +5,9 @@ TrackingNode::TrackingNode() {
                                      this, ros::TransportHints().tcpNoDelay());
 
   cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("/tracking/cmd_vel", 1);
-  debug_pub_ = nh_.advertise<geometry_msgs::Twist>("/tracking/yaw_error", 1);
+  debug_pub_ = nh_.advertise<geometry_msgs::Twist>("/tracking/debug_error", 1);
   debug_land_ = nh_.advertise<geometry_msgs::Twist>("/tracking/land_sent", 1);
-  cmd_vel_marker_pub_ =
-      nh_.advertise<visualization_msgs::Marker>("/cmd_vel_marker", 1);
+  cmd_vel_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("/cmd_vel_marker", 1);
 
   ardrone_land_pub_ = nh_.advertise<std_msgs::Empty>("/ardrone/land", 1);
 
@@ -185,10 +184,10 @@ void TrackingNode::velxy_control(tf::Pose& target_pose, double& velx, double& ve
   vely = target_point.y() * kp_velxy_;
 
   // for debugging
-//  geometry_msgs::Twist debug_msg;
-//  debug_msg.linear.x = target_point.x();
-//  debug_msg.linear.y = target_point.y();
-//  debug_pub_.publish(debug_msg);
+  geometry_msgs::Twist debug_msg;
+  debug_msg.linear.x = target_point.x();
+  debug_msg.linear.y = target_point.y();
+  debug_pub_.publish(debug_msg);
 
 
   // limit the module of speed
